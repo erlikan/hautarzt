@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "isolatedModules": true,
+        "jsx": "react",
+        "lib": [
+            "deno.window",
+            "dom"
+        ],
+        "module": "esnext",
+        "moduleResolution": "node",
+        "noEmit": true,
+        "noLib": false,
+        "resolveJsonModule": true,
+        "strict": true,
+        "target": "esnext",
+        "useDefineForClassFields": true,
+        "allowImportingTsExtensions": true,
+        "types": [
+            "https://deno.land/x/types/index.d.ts"
+        ]
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.tsx"
+    ]
+}

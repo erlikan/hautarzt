@@ -1,0 +1,32 @@
+
+[functions.praxis-details]
+enabled = true
+verify_jwt = true
+import_map = "./functions/praxis-details/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/praxis-details/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/praxis-details/*.html" ]
+
+[functions.analyze-practice]
+enabled = true
+verify_jwt = true
+import_map = "./functions/analyze-practice/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/analyze-practice/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/analyze-practice/*.html" ]
+[functions.praxis-search]
+enabled = true
+verify_jwt = true
+import_map = "./functions/praxis-search/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/praxis-search/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/praxis-search/*.html" ]
