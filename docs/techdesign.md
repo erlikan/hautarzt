@@ -1,6 +1,6 @@
-# Technical Design Decisions - Hautarzt-Verzeichnis
+# Technical Design Decisions - Hautarzt Vergleich
 
-This document records key technical decisions made during the development of the Hautarzt-Verzeichnis project.
+This document records key technical decisions made during the development of the Hautarzt Vergleich project.
 
 ## Frontend Stack Selection (2025-03-29)
 
@@ -17,7 +17,7 @@ This document records key technical decisions made during the development of the
 *   Tailwind CSS allows for rapid UI development and fits well with component-based architectures.
 *   Zustand offers a simple and unopinionated approach to global state, used only if necessary.
 *   SWR complements Next.js's fetching for client-side caching and revalidation.
-*   Leaflet and Chart.js were suggested in `docs/Frontend Implementierungsplan_ Hautarzt-Verzeichnis.md` and are solid choices.
+*   Leaflet and Chart.js were suggested in `docs/Frontend Implementierungsplan_ Hautarzt Vergleich.md` and are solid choices.
 *   npm was chosen during the `create-next-app` initialization.
 
 ---

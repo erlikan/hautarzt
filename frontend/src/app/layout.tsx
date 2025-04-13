@@ -10,10 +10,10 @@ import { Input } from "@/components/ui/input";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    // Default title - will be overridden by pages
-    title: "Hautarzt Verzeichnis",
+    // Default title - updated
+    title: "Hautarzt Vergleich - Finden Sie Ihren Hautarzt",
     // Default description - will be overridden by pages
-    description: "Finden Sie den passenden Hautarzt in Ihrer Nähe.",
+    description: "Vergleichen Sie Hautärzte in Ihrer Nähe basierend auf echten Patienteneinblicken.",
 };
 
 export default function RootLayout({
@@ -29,7 +29,8 @@ export default function RootLayout({
                     <div className="container flex h-14 items-center">
                         <Link href="/" className="mr-6 flex items-center space-x-2">
                             <span className="font-bold sm:inline-block">
-                                Hautarzt-Verzeichnis
+                                {/* Updated Site Name */}
+                                Hautarzt Vergleich
                             </span>
                         </Link>
                         <div className="flex flex-1 items-center justify-end space-x-4">
@@ -51,7 +52,8 @@ export default function RootLayout({
                 <footer className="border-t py-8 md:py-10 mt-auto bg-muted/50">
                     <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
                         <p className="text-sm text-muted-foreground text-center md:text-left">
-                            &copy; {new Date().getFullYear()} Hautarzt-Verzeichnis. Alle Rechte vorbehalten.
+                            {/* Updated Copyright Name */}
+                            &copy; {new Date().getFullYear()} Hautarzt Vergleich. Alle Rechte vorbehalten.
                         </p>
                         <nav className="flex gap-4 sm:gap-6">
                             {/* TODO: Add Sitemap Link when available */}

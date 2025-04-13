@@ -1,4 +1,4 @@
-# Best Practices & Style Guide - Hautarzt-Verzeichnis
+# Best Practices & Style Guide - Hautarzt Vergleich
 
 This document outlines project-specific best practices and coding style guidelines, complementing the general rules provided.
 

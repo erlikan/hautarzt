@@ -1,6 +1,6 @@
-# Hautarzt-Verzeichnis Backend Tests
+# Hautarzt Vergleich Backend Tests
 
-This directory contains tests for the Hautarzt-Verzeichnis backend components, including database interactions, API endpoints (Edge Functions), and utility scripts.
+This directory contains tests for the Hautarzt Vergleich backend components, including database interactions, API endpoints (Edge Functions), and utility scripts.
 
 ## Test Structure
 
@@ -74,7 +74,7 @@ For database tests, you need a test database with the schema already set up. The
 You can configure the database connection in the following ways:
 
 1. Set the `HAUTARZT_DATABASE_URL` environment variable
-2. The test script will fall back to `postgresql://postgres:postgres@localhost:5432/hautarztverzeichnis` if no connection string is provided
+2. The test script will fall back to `postgresql://postgres:postgres@localhost:5432/hautarztvergleich` if no connection string is provided
 
 ## Adding New Tests
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# tests/run_tests.sh - Script to run all tests for the Hautarzt-Verzeichnis backend
+# tests/run_tests.sh - Script to run all tests for the Hautarzt Vergleich backend
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 # Banner
 echo -e "${YELLOW}"
 echo "======================================================"
-echo "         Hautarzt-Verzeichnis Backend Tests           "
+echo "         Hautarzt Vergleich Backend Tests           "
 echo "======================================================"
 echo -e "${NC}"
 
@@ -45,7 +45,7 @@ echo -e "\n${YELLOW}Setting up environment...${NC}"
 # Database Tests
 if command -v psql &> /dev/null; then
   # Get database connection from environment or .env file
-  DB_CONNECTION=${HAUTARZT_DATABASE_URL:-"postgresql://postgres:postgres@localhost:5432/hautarztverzeichnis"}
+  DB_CONNECTION=${HAUTARZT_DATABASE_URL:-"postgresql://postgres:postgres@localhost:5432/hautarztvergleich"}
   
   echo -e "\n${YELLOW}Running Database Schema Validation Tests...${NC}"
   

@@ -1,6 +1,6 @@
-## Testing Instructions for Cursor AI Agent: Hautarzt-Verzeichnis Backend
+## Testing Instructions for Cursor AI Agent: Hautarzt Vergleich Backend
 
-**Overall Goal:** Ensure the reliability, correctness, and security of the Hautarzt-Verzeichnis backend components, including database interactions, API endpoints (Edge Functions), the AI analysis pipeline, and utility scripts.
+**Overall Goal:** Ensure the reliability, correctness, and security of the Hautarzt Vergleich backend components, including database interactions, API endpoints (Edge Functions), the AI analysis pipeline, and utility scripts.
 
 **Prerequisites for Cursor AI:**
 
@@ -143,20 +143,4 @@
         *   The sorting works (results are ordered according to `sortBy`/`sortOrder`).
         *   Geo-search returns results within the radius and sorted by distance (if applicable).
 
-**7. Script: `generate_slugs.py` (Python - `scripts/generate_slugs.py`):**
-
-*   **Task:** Generate unit and potentially integration tests.
-*   **Instructions (Unit Tests - `test_generate_slugs.py`):**
-    *   Use `pytest` and `unittest.mock` (or `pytest-mock`).
-    *   Test the `generate_base_slug` function with various inputs (umlauts, special chars, leading/trailing spaces/hyphens, empty strings).
-    *   Mock the `psycopg2.connect` call and cursor methods (`execute`, `fetchall`, `rowcount`, `commit`, `rollback`).
-    *   Test the main `generate_and_update_slugs` function:
-        *   Simulate `fetchall` returning different sets of practice data (no slugs, some with slugs, conflicting names in the same zone).
-        *   Assert that the correct `UPDATE` query is generated.
-        *   Assert that `execute_batch` (or equivalent loop) is called with the correctly generated `(slug, google_place_id)` tuples, handling uniqueness correctly.
-        *   Assert that `conn.commit()` is called on success and `conn.rollback()` on error.
-*   **Instructions (Integration Tests - Optional):**
-    *   Requires a test database.
-    *   Set up test data in the `praxis` table with missing slugs and potential name conflicts.
-    *   Run the actual script against the test database.
-    *   Use SQL `SELECT` statements to verify that the `slug` column was correctly populated and slugs are unique within their zone (e.g., per `postal_code`). Clean up the test database afterwards.
+**7. Script: `generate_slugs.py`

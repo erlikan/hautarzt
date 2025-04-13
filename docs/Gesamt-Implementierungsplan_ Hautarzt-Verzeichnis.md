@@ -1,4 +1,4 @@
-\# Gesamt-Implementierungsplan: Hautarzt-Verzeichnis
+\# Gesamt-Implementierungsplan: Hautarzt Vergleich
 
 \*\*Projektübersicht:\*\* Erstellung einer modernen Webanwendung, die Hautarztpraxen in Deutschland listet und detaillierte Patienteneinblicke basierend auf KI-analysierten Google Reviews und einem eigenen Bewertungsscore bietet.
 

@@ -1,4 +1,4 @@
-\#\# Dokumentation Frontend-Konzept: Hautarzt-Verzeichnis
+## Dokumentation Frontend-Konzept: Hautarzt Vergleich
 
 \*\*Ziel:\*\* Entwicklung einer benutzerfreundlichen, mobil-optimierten Verzeichnisseite für Hautärzte in Deutschland mit detaillierten, auf KI-Analysen basierenden Patienteneinblicken. Die Begriffe "KI", "Bewertung" oder "Rezension" sollen gegenüber dem Endnutzer vermieden werden; stattdessen wird von "Patienteneinblicken", "Praxis-Analyse" oder "Erfahrungen" gesprochen.
 

@@ -1,6 +1,7 @@
 // Keep necessary imports for generateMetadata
 import { apiService } from '../../../services/api'; // Adjust path if needed
-import type { SearchParams } from '../../../services/api'; // Import the SearchParams type
+// Use new SearchPraxenParams type
+import type { SearchPraxenParams } from '../../../services/api';
 import type { Metadata, ResolvingMetadata } from 'next';
 // Import the new client component
 import StadtPageClientContent from '../../../components/stadt/StadtPageClientContent';
@@ -35,12 +36,11 @@ export async function generateMetadata(
     let praxenData = null;
     if (!isNearby) { // Don't fetch for "nearby" as it depends on user location
         try {
-            // Construct the SearchParams object for the API call
-            const searchParamsForMeta: SearchParams = {
-                city: stadtName, // Use the capitalized city name for the search
+            // Construct the SearchPraxenParams object for the API call
+            const searchParamsForMeta: SearchPraxenParams = {
+                contextCitySlug: stadtSlug, // Use the slug for context
                 page: 1,
                 pageSize: 10, // Fetch first 10 for ItemList
-                // Add other default/necessary params if required by the API
                 sortBy: 'score', // Default sort for initial list
                 sortDirection: 'desc'
             };
@@ -88,21 +88,19 @@ export async function generateMetadata(
                 "@type": "ListItem",
                 "position": index + 1, // Position on the current page (1-based)
                 "item": {
-                    "@type": "MedicalClinic", // Or Physician - assuming MedicalClinic for now
+                    "@type": "MedicalClinic", // Or Physician
                     "name": praxis.name,
-                    // TODO: Get base URL dynamically
-                    "url": `${process.env.NEXT_PUBLIC_BASE_URL || ''}/hautarzt/${stadtSlug}/${praxis.slug}`,
-                    // Optional: Add address and rating if available in search results
-                    "address": praxis.stadt?.name && praxis.plz ? {
+                    "url": `${process.env.NEXT_PUBLIC_BASE_URL || ''}/hautarzt/${praxis.city_slug || stadtSlug}/${praxis.slug}`, // Use city_slug if available
+                    // Optional: Add address and rating if available
+                    "address": praxis.city && praxis.postal_code ? {
                         "@type": "PostalAddress",
-                        "addressLocality": praxis.stadt.name, // Corrected: Use praxis.stadt.name
-                        "postalCode": praxis.plz // Corrected: Use praxis.plz
+                        "addressLocality": praxis.city,
+                        "postalCode": praxis.postal_code
                     } : undefined,
-                    // TODO: Add aggregateRating if available in search results & needed per spec
-                    // Requires mapping analysis data in apiService.searchPraxen and PraxisSummary type
-                    "aggregateRating": praxis.analysis?.overall_score && praxis.bewertung_count ? {
+                    // Use top-level score and check bewertung_count existence
+                    "aggregateRating": praxis.overall_score !== null && praxis.overall_score !== undefined && praxis.bewertung_count ? {
                         "@type": "AggregateRating",
-                        "ratingValue": Math.round((praxis.analysis.overall_score / 20) * 10) / 10,
+                        "ratingValue": Math.round((praxis.overall_score / 20) * 10) / 10,
                         "bestRating": "5",
                         "worstRating": "1",
                         "ratingCount": praxis.bewertung_count
@@ -123,7 +121,7 @@ export async function generateMetadata(
             title: title,
             description: description,
             url: `/hautarzt/${stadtSlug}`,
-            siteName: 'Hautarzt-Verzeichnis',
+            siteName: 'Hautarzt Vergleich',
             locale: 'de_DE',
             type: 'website',
         },

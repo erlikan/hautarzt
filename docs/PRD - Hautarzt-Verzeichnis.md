@@ -1,4 +1,4 @@
-\#\# Product Requirements Document: Hautarzt-Verzeichnis (Dermatologist Directory)
+## Product Requirements Document: Hautarzt Vergleich (Dermatologist Directory)
 
 \*\*Version:\*\* 1.0  
 \*\*Date:\*\* 2025-03-29  
@@ -7,7 +7,7 @@
 \#\#\# 1\. Introduction
 
 \*\*1.1. Overview:\*\*  
-Hautarzt-Verzeichnis is a web application designed to be the leading online directory for dermatologists (Hautärzte) in Germany. It aims to provide patients with significantly more value than standard directory listings by leveraging publicly available Google Maps/Places data (specifically reviews) and applying AI-driven analysis to offer deep insights into the typical patient experience at each practice.
+Hautarzt Vergleich is a web application designed to be the leading online directory for dermatologists (Hautärzte) in Germany. It aims to provide patients with significantly more value than standard directory listings by leveraging publicly available Google Maps/Places data (specifically reviews) and applying AI-driven analysis to offer deep insights into the typical patient experience at each practice.
 
 \*\*1.2. Problem Statement:\*\*  
 Patients searching for dermatologists often rely on simple star ratings and a handful of subjective reviews, making it difficult to gauge crucial aspects like actual waiting times, staff friendliness, physician competence, or communication quality. Existing platforms often lack structured, comparative insights derived from the wealth of information hidden within patient reviews.

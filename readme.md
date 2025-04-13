@@ -1,7 +1,41 @@
 # Hautarzt Vergleich
 
+Das führende Verzeichnis für Hautärzte in Deutschland mit echten Patienteneinblicken.
 
-Verzeichnis von Hautarztpraxen in Deutschland mit KI-generierten Einblicken basierend auf öffentlich verfügbaren Patientenbewertungen.
+## Übersicht
+
+Dieses Projekt enthält das Frontend (Next.js), Backend (Supabase Edge Functions & PostgreSQL) und unterstützende Skripte für die Webanwendung Hautarzt Vergleich.
+
+## Hauptfunktionen
+
+*   Umfassendes Verzeichnis von Hautarztpraxen in Deutschland.
+*   Detaillierte Praxis-Seiten mit Kontaktdaten, Öffnungszeiten, angebotenen Leistungen.
+*   KI-basierte Analyse von Patientenbewertungen zu Aspekten wie Wartezeit, Freundlichkeit, Kompetenz.
+*   Einzigartiger "Praxis-Score" basierend auf Google-Bewertungen und KI-Einblicken.
+*   Suche nach Stadt, PLZ und in der Nähe.
+
+## Technologien
+
+*   **Frontend:** Next.js (App Router), React, TypeScript, Tailwind CSS, Shadcn UI, Leaflet
+*   **Backend:** Supabase (PostgreSQL, Auth, Edge Functions, pg_cron, PostGIS)
+*   **KI:** Google Generative AI (Gemini API)
+*   **Hosting:** (To be determined - e.g., Vercel, Self-hosted)
+
+## Setup & Entwicklung
+
+*Siehe spezifische READMEs in `frontend/` und `supabase/` sowie die Dokumentation in `docs/`.* 
+
+## Deployment
+
+*Details zum Deployment folgen.*
+
+## Beitragende
+
+*(Hier Beitragende auflisten)*
+
+## Lizenz
+
+*(Lizenz angeben, z.B. MIT)*
 
 
 ## Key Features

@@ -1,4 +1,4 @@
-\# Frontend Implementierungsplan: Hautarzt-Verzeichnis
+\# Frontend Implementierungsplan: Hautarzt Vergleich
 
 \*\*Projektziel:\*\* Entwicklung einer benutzerfreundlichen, mobil-optimierten Verzeichnisseite für Hautärzte in Deutschland mit detaillierten, auf Analysen basierenden Patienteneinblicken.
 

@@ -1,6 +1,6 @@
-# API Documentation - Hautarzt-Verzeichnis
+# API Documentation - Hautarzt Vergleich
 
-This document describes the available API endpoints for the Hautarzt-Verzeichnis frontend.
+This document describes the available API endpoints for the Hautarzt Vergleich frontend.
 
 ---
 
