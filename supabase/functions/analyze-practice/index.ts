@@ -1,37 +1,10 @@
 // supabase/functions/analyze-practice/index.ts
-
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "https://esm.sh/@google/generative-ai";
-
-// --- Typdefinition für die erwartete Analyse-Struktur (hilft bei der Entwicklung) ---
-// (Du kannst dies genauer machen, z.B. mit Zod oder io-ts für Laufzeitvalidierung)
-interface GeminiAnalysisResult {
-  praxis_name: string;
-  aspekte_bewertung: {
-    [key: string]: { positiv: number; neutral: number; negativ: number };
-    termin_wartezeit: { positiv: number; neutral: number; negativ: number };
-    freundlichkeit_empathie: { positiv: number; neutral: number; negativ: number };
-    aufklaerung_vertrauen: { positiv: number; neutral: number; negativ: number };
-    kompetenz_behandlung: { positiv: number; neutral: number; negativ: number };
-    praxis_ausstattung: { positiv: number; neutral: number; negativ: number };
-  };
-  tags: string[];
-  genannte_leistungen: string[];
-  staerken: string[];
-  schwaechen: string[];
-  mentioned_doctors: string[];
-  trend: 'positiv' | 'negativ' | 'neutral';
-  trend_begruendung: string;
-  vergleich_kasse_privat: string;
-  emotionale_tags: string[];
-  zusammenfassung: string;
-  haeufig_genannte_begriffe: string[];
-}
-
 // --- Hilfsfunktion zum Prompt bauen ---
 // (Identisch zu vorherigem Beispiel, hier zur Vollständigkeit)
-function buildGeminiPrompt(praxis: any, reviews: any[]): string {
+function buildGeminiPrompt(praxis, reviews) {
   const praxisInfo = `
 Praxis-Stammdaten:
 Name: ${praxis.name}
@@ -42,13 +15,8 @@ Fachrichtung: ${praxis.category || 'Hautarzt'} (Subtypen: ${praxis.subtypes?.joi
 Google-Gesamtbewertung: ${praxis.rating} Sterne (${praxis.reviews} Bewertungen)
 Verteilung (1-5 Sterne): ${praxis.reviews_per_score_1 || 0}-${praxis.reviews_per_score_2 || 0}-${praxis.reviews_per_score_3 || 0}-${praxis.reviews_per_score_4 || 0}-${praxis.reviews_per_score_5 || 0}
   `.trim();
-
-  const reviewLines = reviews.map(r =>
-    `- ${r.review_rating} Sterne (${r.review_datetime_utc ? new Date(r.review_datetime_utc).toLocaleDateString('de-DE') : 'Datum unbekannt'}): ${r.review_text || ''}`
-  ).join('\n');
-
+  const reviewLines = reviews.map((r) => `- ${r.review_rating} Sterne (${r.review_datetime_utc ? new Date(r.review_datetime_utc).toLocaleDateString('de-DE') : 'Datum unbekannt'}): ${r.review_text || ''}`).join('\n');
   // Innerhalb der buildGeminiPrompt Funktion:
-
   const prompt = `
 Du bist ein KI-Assistenzsystem, spezialisiert auf die Analyse von Google-Rezensionen für Hautarztpraxen.
 Deine Aufgabe: Analysiere die folgenden Patientenbewertungen und Stammdaten einer Praxis. Extrahiere die unten definierten Informationen und gib sie **ausschließlich** als valides JSON-Objekt zurück. Die Ausgabe soll **objektiv die typischen Patientenerfahrungen widerspiegeln**, ohne explizit auf die 'Bewertungen' oder 'Rezensionen' als Quelle zu verweisen. Formuliere die Texte so, als würdest du einen **Gesamteindruck der Praxis aus Patientensicht** wiedergeben und einem **Patienten** bei der Arztwahl helfen.
@@ -81,75 +49,35 @@ JSON-Ausgabe:
 `;
   return prompt;
 }
-
 // --- Stored Procedure Aufruf Funktion ---
 // Diese Funktion ruft die PostgreSQL Stored Procedure auf, die wir in Schritt 8 erstellen werden.
-async function callSaveAnalysisProcedure(
-  supabaseAdmin: SupabaseClient,
-  praxisGooglePlaceId: string,
-  analysisResult: GeminiAnalysisResult
-): Promise<{ data: any; error: any }> {
+async function callSaveAnalysisProcedure(supabaseAdmin, praxisGooglePlaceId, analysisResult) {
   console.log(`[${praxisGooglePlaceId}] Calling stored procedure save_analysis_data...`);
   return await supabaseAdmin.rpc('save_analysis_data', {
     p_praxis_google_place_id: praxisGooglePlaceId,
     p_analysis_data: analysisResult // Übergabe des gesamten JSON-Objekts
   });
 }
-
-// Helper function to update analysis status
-async function updateStatus(praxisGooglePlaceId: string, status: string, errorMessage?: string) {
-  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-  const HAUTARZT_SUPABASE_URL = Deno.env.get("HAUTARZT_SUPABASE_URL");
-  const HAUTARZT_SUPABASE_SERVICE_KEY = Deno.env.get("HAUTARZT_SUPABASE_SERVICE_KEY");
-
-  if (!GEMINI_API_KEY || !HAUTARZT_SUPABASE_URL || !HAUTARZT_SUPABASE_SERVICE_KEY) {
-    console.error("Missing environment variables/secrets");
-    throw new Error("Internal configuration error");
-  }
-
-  const supabaseAdmin = createClient(HAUTARZT_SUPABASE_URL!, HAUTARZT_SUPABASE_SERVICE_KEY!);
-
-  const logPrefix = `[${praxisGooglePlaceId}]`;
-
-  try {
-    await supabaseAdmin
-      .from('praxis')
-      .update({ analysis_status: status, updated_at: new Date().toISOString() })
-      .eq('google_place_id', praxisGooglePlaceId);
-
-    if (errorMessage) {
-      await supabaseAdmin
-        .from('praxis_analysis')
-        .upsert({
-          praxis_google_place_id: praxisGooglePlaceId,
-          last_error_message: errorMessage.substring(0, 1000) // Mehr Platz für Fehler
-        }, { onConflict: 'praxis_google_place_id' });
-    }
-
-    console.log(`${logPrefix} Status set to '${status}'.`);
-  } catch (error) {
-    console.error(`${logPrefix} Critical: Failed to even update status to ${status}:`, error);
-    throw error;
-  }
-}
-
-// Main handler
+// --- Haupt-Handler für die Function ---
 serve(async (req) => {
   // CORS Headers (wichtig für Aufrufe aus dem Browser, optional für Server-zu-Server)
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*', // Oder spezifischer
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
   };
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', {
+      headers: corsHeaders
+    });
   }
-
   // Request-Verarbeitung
   if (req.method !== 'POST') {
-    return new Response("Method Not Allowed", { status: 405, headers: corsHeaders });
+    return new Response("Method Not Allowed", {
+      status: 405,
+      headers: corsHeaders
+    });
   }
-
-  let praxisGooglePlaceId: string | null = null;
+  let praxisGooglePlaceId = null;
   try {
     const body = await req.json();
     praxisGooglePlaceId = body.praxis_google_place_id;
@@ -158,77 +86,183 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error("Failed to parse request body:", error);
-    return new Response(JSON.stringify({ error: "Invalid request body" }), { status: 400, headers: corsHeaders });
+    return new Response(JSON.stringify({
+      error: "Invalid request body"
+    }), {
+      status: 400,
+      headers: corsHeaders
+    });
   }
-
-  const logPrefix = `[${praxisGooglePlaceId}]`;
-
+  // Secrets holen
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+  const HAUTARZT_SUPABASE_URL = Deno.env.get("HAUTARZT_SUPABASE_URL");
+  const HAUTARZT_SUPABASE_SERVICE_KEY = Deno.env.get("HAUTARZT_SUPABASE_SERVICE_KEY");
+  if (!GEMINI_API_KEY || !HAUTARZT_SUPABASE_URL || !HAUTARZT_SUPABASE_SERVICE_KEY) {
+    console.error("Missing environment variables/secrets");
+    return new Response(JSON.stringify({
+      error: "Internal configuration error"
+    }), {
+      status: 500,
+      headers: corsHeaders
+    });
+  }
+  // Clients initialisieren
+  const supabaseAdmin = createClient(HAUTARZT_SUPABASE_URL, HAUTARZT_SUPABASE_SERVICE_KEY);
+  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash"
+  }); // Oder gemini-1.0-pro
+  const logPrefix = `[${praxisGooglePlaceId}]`; // Für einfachere Log-Zuordnung
   try {
-    // Step 1: Immediately update status to 'processing'
-    await updateStatus(praxisGooglePlaceId, 'processing');
-
-    // Step 2: Check if reviews exist
-    const { praxisData, reviewsData, error: dataError } = await fetchPraxisAndReviewData(praxisGooglePlaceId);
-
-    if (dataError) {
-      throw new Error(dataError);
+    console.log(`${logPrefix} Starting analysis...`);
+    // --- Schritt 1: Daten aus Supabase holen ---
+    console.log(`${logPrefix} Fetching data...`);
+    const { data: praxisData, error: praxisError } = await supabaseAdmin.from('praxis').select('*, reviews_per_score_1, reviews_per_score_2, reviews_per_score_3, reviews_per_score_4, reviews_per_score_5') // Explizit alle benötigten Spalten auflisten
+      .eq('google_place_id', praxisGooglePlaceId).single();
+    if (praxisError || !praxisData) {
+      throw new Error(`Praxis not found or DB error: ${praxisError?.message || 'No data'}`);
     }
-
-    // Step 3: Build the prompt
+    // Update Status auf 'processing'
+    await supabaseAdmin.from('praxis').update({
+      analysis_status: 'processing',
+      updated_at: new Date().toISOString()
+    }).eq('google_place_id', praxisGooglePlaceId);
+    console.log(`${logPrefix} Status set to 'processing'.`);
+    const { data: reviewsData, error: reviewsError } = await supabaseAdmin.from('review').select('review_text, review_rating, review_datetime_utc').eq('praxis_google_place_id', praxisGooglePlaceId).order('review_datetime_utc', {
+      ascending: false
+    }).limit(50);
+    if (reviewsError) throw new Error(`Error fetching reviews: ${reviewsError.message}`);
+    if (!reviewsData || reviewsData.length === 0) {
+      console.warn(`${logPrefix} No reviews found. Setting status to 'completed' (empty analysis).`);
+      await supabaseAdmin.from('praxis').update({
+        analysis_status: 'completed',
+        updated_at: new Date().toISOString()
+      }).eq('google_place_id', praxisGooglePlaceId);
+      // Optional: Leeren Eintrag in praxis_analysis anlegen?
+      return new Response(JSON.stringify({
+        message: "No reviews found, analysis skipped."
+      }), {
+        status: 200,
+        headers: corsHeaders
+      });
+    }
+    // --- Schritt 2: Prompt für Gemini bauen ---
+    console.log(`${logPrefix} Building prompt with ${reviewsData.length} reviews...`);
     const prompt = buildGeminiPrompt(praxisData, reviewsData);
-
-    // Step 4: Call Gemini API
-    let geminiResponse;
-    try {
-      const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY")!);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-      const generationConfig = {
-        temperature: 0.2,
-        responseMimeType: "application/json",
-      };
-      const safetySettings = [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-      ];
-
-      geminiResponse = await model.generateContent(prompt, generationConfig, safetySettings);
-
-      const rawGeminiResponse = geminiResponse.response.text();
-      const analysisJsonText = rawGeminiResponse.replace(/^```(json)?|```$/g, '').trim();
-
-      // Step 6: Validate JSON
-      let analysisJson;
-      try {
-        analysisJson = JSON.parse(analysisJsonText);
-
-        // Basic structure validation (add more checks as needed)
-        if (typeof analysisJson.praxis_name !== 'string' ||
-          typeof analysisJson.aspekte_bewertung?.termin_wartezeit?.positiv !== 'number' ||
-          !Array.isArray(analysisJson.tags) ||
-          !['positiv', 'negativ', 'neutral'].includes(analysisJson.trend)
-        ) {
-          throw new Error("Extracted JSON has incorrect structure or types.");
-        }
-      } catch (validationError) {
-        console.error(`${logPrefix} JSON validation failed:`, validationError);
-        throw validationError;
+    // --- Schritt 3: Gemini API Call ---
+    console.log(`${logPrefix} Calling Gemini API...`);
+    const generationConfig = {
+      temperature: 0.2,
+      // maxOutputTokens: 8192, // Ggf. anpassen, falls nötig
+      responseMimeType: "application/json"
+    };
+    // Sicherheitseinstellungen (optional, ggf. anpassen)
+    const safetySettings = [
+      {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
       }
-
-      // Step 7: Call Stored Procedure to save data
-      await saveAnalysisToDatabase(praxisGooglePlaceId, analysisJson);
-
-    } catch (error) {
-      console.error(`${logPrefix} Analysis failed:`, error);
-      throw error;
+    ];
+    // --- Schritt 3: Gemini API Call ---
+    // ... (Code für den API Call bleibt gleich) ...
+    let analysisJsonText;
+    try {
+      const result = await model.generateContent(prompt, generationConfig, safetySettings);
+      const response = result.response;
+      // ALT: analysisJsonText = response.text();
+      // NEU: Roh-Text holen
+      const rawGeminiResponse = response.text();
+      if (!rawGeminiResponse) {
+        const promptFeedback = response.promptFeedback;
+        const finishReason = response.finishReason;
+        throw new Error(`Gemini response blocked or empty. Reason: ${finishReason}, Feedback: ${JSON.stringify(promptFeedback)}`);
+      }
+      console.log(`${logPrefix} Raw Gemini Response received: ${rawGeminiResponse.substring(0, 100)}...`); // Logge Anfang der rohen Antwort
+      // NEU: JSON extrahieren (entfernt Markdown-Fences)
+      const jsonMatch = rawGeminiResponse.match(/\{[\s\S]*\}/); // Sucht den ersten Block von { bis }
+      if (!jsonMatch) {
+        throw new Error(`Could not find JSON block in Gemini response. Raw: ${rawGeminiResponse}`);
+      }
+      analysisJsonText = jsonMatch[0]; // Nimm nur den gefundenen JSON-Teil
+      console.log(`${logPrefix} Extracted JSON String: ${analysisJsonText.substring(0, 100)}...`); // Logge Anfang des extrahierten JSON
+    } catch (geminiError) {
+      throw new Error(`Gemini API call or extraction failed: ${geminiError.message}`);
     }
-
+    // --- Schritt 4: Response validieren ---
+    console.log(`${logPrefix} Validating extracted JSON...`);
+    let analysisResult;
+    try {
+      // Parse den *extrahierten* JSON-Text
+      analysisResult = JSON.parse(analysisJsonText);
+      // --- Einfache Validierung (Beispiele - ersetzen durch robustere Methode!) ---
+      if (typeof analysisResult.praxis_name !== 'string' || typeof analysisResult.aspekte_bewertung?.termin_wartezeit?.positiv !== 'number' || !Array.isArray(analysisResult.tags) || ![
+        'positiv',
+        'negativ',
+        'neutral'
+      ].includes(analysisResult.trend)) {
+        throw new Error("Extracted JSON has incorrect structure or types.");
+      }
+      console.log(`${logPrefix} Extracted JSON structure seems ok.`);
+    } catch (parseOrValidationError) {
+      // Gib hier den *extrahierten* JSON-String aus, der Probleme machte
+      console.error(`${logPrefix} Extracted JSON validation failed: ${parseOrValidationError.message}. Extracted JSON String: ${analysisJsonText}`);
+      throw new Error(`Invalid extracted JSON: ${parseOrValidationError.message}`);
+    }
+    // --- Schritt 5: Datenbank speichern mittels Stored Procedure ---
+    // ... (Rest des Codes bleibt gleich) ...
+    // --- Schritt 5: Datenbank speichern mittels Stored Procedure ---
+    const { error: rpcError } = await callSaveAnalysisProcedure(supabaseAdmin, praxisGooglePlaceId, analysisResult);
+    if (rpcError) {
+      throw new Error(`Error calling stored procedure: ${rpcError.message}`);
+    }
+    // --- Schritt 6: Status in 'praxis' auf 'completed' setzen (wird jetzt in SP gemacht) ---
+    // Wird jetzt in der Stored Procedure erledigt, um Atomarität zu gewährleisten.
+    console.log(`${logPrefix} Analysis completed and saved successfully via stored procedure.`);
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Analysis completed."
+    }), {
+      status: 200,
+      headers: corsHeaders
+    });
   } catch (error) {
-    console.error(`${logPrefix} Analysis failed:`, error);
-    throw error;
+    console.error(`${logPrefix} --- ERROR DURING ANALYSIS ---:`, error);
+    // Versuch, Status auf 'failed' zu setzen
+    try {
+      await supabaseAdmin.from('praxis').update({
+        analysis_status: 'failed',
+        updated_at: new Date().toISOString()
+      }).eq('google_place_id', praxisGooglePlaceId);
+      // Optional: Fehler in praxis_analysis speichern (falls Eintrag existiert)
+      await supabaseAdmin.from('praxis_analysis').upsert({
+        praxis_google_place_id: praxisGooglePlaceId,
+        last_error_message: error.message.substring(0, 1000) // Mehr Platz für Fehler
+      }, {
+        onConflict: 'praxis_google_place_id'
+      });
+      console.error(`${logPrefix} Status set to 'failed'.`);
+    } catch (updateError) {
+      console.error(`${logPrefix} Critical: Failed to even update status to failed:`, updateError);
+    }
+    // Gib detaillierteren Fehler zurück
+    return new Response(JSON.stringify({
+      success: false,
+      error: `Analysis failed: ${error.message}`
+    }), {
+      status: 500,
+      headers: corsHeaders
+    });
   }
-
-  return new Response(JSON.stringify({ success: true, message: "Analysis completed." }), { status: 200, headers: corsHeaders });
-})
+});
