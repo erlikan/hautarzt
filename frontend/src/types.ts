@@ -119,4 +119,25 @@ export interface PraxisDetail {
 
 // Type previously missing, might be needed by KiDashboard or elsewhere
 // Ensure this matches the data structure used
-export interface PraxisAnalysisData extends PraxisAnalysis { } 
+export interface PraxisAnalysisData extends PraxisAnalysis { }
+
+// --- Types for Static Content --- 
+
+export interface FaqItem {
+    id: string; // Filename/slug
+    question: string;
+    answer: string; // Markdown content
+    display_order?: number;
+    is_active?: boolean;
+}
+
+export interface ServiceInfoItem {
+    id: string; // Filename/slug
+    slug: string;
+    title: string;
+    summary?: string | null;
+    icon_name?: string | null;
+    display_on_homepage?: boolean;
+    is_active?: boolean;
+    // content?: string; // If you need the full content later
+} 

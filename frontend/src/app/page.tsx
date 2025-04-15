@@ -1,180 +1,121 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+// Remove 'use client' directive
+// import { useState } from 'react'; // Remove client hooks
+// import { useRouter } from 'next/navigation'; // Remove client hooks
 import Link from 'next/link';
-// Shadcn UI / Lucide Imports
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Search, MapPin, Clock, Heart, ShieldCheck, AlertCircle } from 'lucide-react';
+// Remove client-side Shadcn/Lucide imports if not used directly here
+// Keep server-side imports like Metadata
+import type { Metadata } from 'next';
+// Import the new client component
+import HomePageClientContent from '@/components/home/HomePageClientContent';
+// REMOVE Supabase client import for this page
+// import { createClient } from '@supabase/supabase-js'; 
+// Import Node.js modules for file system access
+import fs from 'fs';
+import path from 'path';
+import matter from 'gray-matter'; // Library to parse frontmatter
+// Import types from central location
+import type { FaqItem, ServiceInfoItem } from '@/types'; // Adjust path if needed
 
-export default function HomePage() {
-    // const [searchTerm, setSearchTerm] = useState(''); // Remove searchTerm state
-    const [searchCity, setSearchCity] = useState('');
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+// Define types for the data structure we expect from frontmatter
+// interface FaqItem { ... }
+// interface ServiceInfoItem { ... }
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Remove client-side slug generation and push
-        // const city = searchCity.trim();
-        // if (city) {
-        //     const citySlug = city.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-        //     const url = `/hautarzt/${citySlug}`;
-        //     router.push(url);
-        // }
-        // Instead, let the form submit naturally to the action URL
-    };
+// SEO Metadata - Stays Here
+export const metadata: Metadata = {
+    title: "Hautarzt Vergleich | Den besten Hautarzt in Ihrer Nähe finden",
+    description: "Finden Sie den besten Hautarzt in Ihrer Nähe mit Deutschlands führendem Verzeichnis. Echte Patienteneinblicke zu Wartezeit, Freundlichkeit und Kompetenz. Jetzt Praxis suchen!",
+    // Add canonical URL or other metadata as needed later
+    // keywords: "Hautarzt, Hautarzt finden, Hautarzt in der Nähe, Dermatologe, Praxisvergleich, Patientenbewertungen", // Optional
+};
 
-    const handleLocationClick = () => {
-        setError(null);
-        if ('geolocation' in navigator) {
-            setIsLoading(true);
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    // Redirect to the intermediary nearby search page
-                    router.push(`/nearby-search`);
-                    // Option 1: Specific nearby route
-                    // router.push(`/hautarzt/nearby?lat=${latitude}&lon=${longitude}`);
-                },
-                (err) => {
-                    console.error('Geolocation error:', err);
-                    setError('Der Standort konnte nicht ermittelt werden. Bitte erteilen Sie die Berechtigung oder versuchen Sie es später erneut.');
-                    setIsLoading(false);
+// Remove constants/types if they are now fully in the client component
+// interface CityData { ... }
+// const popularCities: CityData[] = [ ... ];
+// const faqItems = [ ... ];
+
+// Helper function to read and parse markdown files from a directory
+function getContentData<T>(directory: string): T[] {
+    const contentDirectory = path.join(process.cwd(), directory);
+    console.log(`[getContentData] Attempting to read content from: ${contentDirectory}`);
+    try {
+        const filenames = fs.readdirSync(contentDirectory);
+        console.log(`[getContentData] Found ${filenames.length} files/dirs in ${directory}:`, filenames);
+
+        const items = filenames
+            .filter(filename => {
+                const isMarkdown = filename.endsWith('.md');
+                // console.log(`[getContentData] Checking ${filename}: Is Markdown? ${isMarkdown}`); // Verbose log
+                return isMarkdown;
+            })
+            .map((filename): T => {
+                console.log(`[getContentData] Processing file: ${filename}`);
+                const slug = filename.replace(/\.md$/, '');
+                const filePath = path.join(contentDirectory, filename);
+                const fileContents = fs.readFileSync(filePath, 'utf8');
+                const { data: frontmatter, content: markdownContent } = matter(fileContents);
+
+                // Log parsed parts for clarity
+                console.log(`[getContentData] Parsed ${filename} -> Frontmatter:`, frontmatter);
+                console.log(`[getContentData] Parsed ${filename} -> Content:`, markdownContent.substring(0, 50) + '...'); // Log start of content
+
+                let itemData: any = {
+                    id: slug,
+                    ...frontmatter, // Spread the parsed frontmatter keys (question, title, etc.)
+                };
+
+                // Explicitly assign the parsed content to the correct field based on type
+                if (directory === 'content/faq') {
+                    // Trim whitespace from the content
+                    itemData.answer = markdownContent.trim();
+                } else if (directory === 'content/services') {
+                    // Assign content if needed for service detail pages later
+                    // itemData.content = markdownContent; 
                 }
-            );
-        } else {
-            setError('Ihr Browser unterstützt keine Standortermittlung. Bitte geben Sie Ihren Ort manuell ein.');
-        }
-    };
+
+                // Ensure required fields exist (example for FaqItem)
+                if (directory === 'content/faq' && typeof itemData.question !== 'string') {
+                    console.warn(`[getContentData] Missing 'question' in frontmatter for ${filename}`);
+                    // Return null or skip if essential data is missing? Decide based on requirements.
+                    // For now, let it pass but it might cause issues later.
+                }
+
+                return itemData as T; // Cast to generic type T
+            });
+        console.log(`[getContentData] Successfully processed ${items.length} items from ${directory}.`);
+        return items;
+    } catch (error) {
+        // Log the specific error
+        console.error(`[getContentData] Error reading content from ${directory}:`, error);
+        return []; // Return empty array on error
+    }
+}
+
+// This is now a Server Component
+export default async function HomePage() {
+    console.log('HomePage Server Component executing...'); // Add entry log
+    // Read static content from markdown files
+    // console.log('Reading content files...'); // Remove older log
+    const allFaqItems = getContentData<FaqItem>('content/faq');
+    const allServiceInfoItems = getContentData<ServiceInfoItem>('content/services');
+    // console.log('Raw FAQ Items Found:', allFaqItems.length); // Remove older log
+    // console.log('Raw Service Info Found:', allServiceInfoItems.length); // Remove older log
+
+    // Filter and sort based on frontmatter
+    const faqItems = allFaqItems
+        .filter((item: any) => item.is_active !== false)
+        .sort((a, b) => (a.display_order || 99) - (b.display_order || 99));
+
+    const serviceInfoItems = allServiceInfoItems
+        .filter((item: any) => item.is_active !== false && item.display_on_homepage === true);
+
+    // console.log('Filtered FAQ Items to pass:', faqItems.length); // Remove older log
+    // console.log('Filtered Service Info to pass:', serviceInfoItems.length); // Remove older log
+    console.log(`HomePage passing ${faqItems.length} FAQs and ${serviceInfoItems.length} Services to client.`);
 
     return (
-        <div className="container py-12 md:py-20">
-            <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">
-                    Finden Sie den passenden Hautarzt
-                </h1>
-                <p className="text-lg text-muted-foreground mb-8">
-                    mit echten Patienteneinblicken zu Wartezeit, Freundlichkeit und Kompetenz.
-                </p>
-                {/* Trust Text */}
-                <p className="text-sm text-muted-foreground mb-10">
-                    Basierend auf der Analyse von hunderttausenden Patientenerfahrungen.
-                </p>
-            </div>
-
-            {/* Search Form Card */}
-            <Card className="max-w-xl mx-auto mb-12">
-                <CardHeader>
-                    <CardTitle>Praxis finden</CardTitle>
-                    {/* <CardDescription>Geben Sie einen Ort ein.</CardDescription> */}
-                </CardHeader>
-                <CardContent>
-                    {/* Update form action to point to the Next.js API proxy route */}
-                    <form action="/api/search-redirect" method="GET" className="space-y-4">
-                        <div className="space-y-1.5">
-                            <Input
-                                id="searchCity"
-                                name="q" // Ensure input name is 'q'
-                                type="text"
-                                placeholder="PLZ oder Stadt eingeben"
-                                // value={searchCity} // Uncontrolled component now
-                                // onChange={(e) => setSearchCity(e.target.value)}
-                                disabled={isLoading}
-                                required
-                            />
-                        </div>
-
-                        {/* Remove General Search Term Input */}
-                        {/* 
-                        <div className="space-y-1.5">
-                            <Label htmlFor="searchTerm">...</Label>
-                            <Input id="searchTerm" ... />
-                        </div> 
-                        */}
-
-                        {error && (
-                            <Alert variant="destructive" className="text-xs">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertDescription>{error}</AlertDescription>
-                            </Alert>
-                        )}
-
-                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                            {/* Primary Search Button */}
-                            <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? 'Suche läuft...' : <><Search className="w-4 h-4 mr-2" /> Hautärzte finden</>}
-                            </Button>
-                            {/* Secondary/Outline Location Button */}
-                            <Button
-                                type="button"
-                                variant="outline" // Ensure outline variant
-                                className="w-full"
-                                onClick={handleLocationClick}
-                                disabled={isLoading}
-                            >
-                                <MapPin className="w-4 h-4 mr-2" /> Meinen Standort nutzen
-                            </Button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
-
-            {/* Feature Highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <Card className="text-center">
-                    <CardHeader>
-                        <div className="flex justify-center mb-3">
-                            <Clock className="w-8 h-8 text-primary" />
-                        </div>
-                        <CardTitle className="text-lg">Wartezeit-Einblicke</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-muted-foreground">
-                        Erfahren Sie, wie lange andere Patienten im Durchschnitt gewartet haben.
-                    </CardContent>
-                </Card>
-                <Card className="text-center">
-                    <CardHeader>
-                        <div className="flex justify-center mb-3">
-                            <Heart className="w-8 h-8 text-primary" />
-                        </div>
-                        <CardTitle className="text-lg">Freundlichkeit</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-muted-foreground">
-                        Wie empathisch und zugewandt wurden Patienten behandelt?
-                    </CardContent>
-                </Card>
-                <Card className="text-center">
-                    <CardHeader>
-                        <div className="flex justify-center mb-3">
-                            <ShieldCheck className="w-8 h-8 text-primary" />
-                        </div>
-                        <CardTitle className="text-lg">Kompetenz & Behandlung</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-muted-foreground">
-                        Einblicke in die fachliche Qualität und den Behandlungserfolg.
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Popular Cities */}
-            <div className="text-center">
-                <h3 className="mb-4 text-lg font-semibold">Beliebte Städte</h3>
-                <div className="flex flex-wrap justify-center gap-3">
-                    {['berlin', 'hamburg', 'muenchen', 'koeln', 'frankfurt'].map(citySlug => (
-                        <Link key={citySlug} href={`/hautarzt/${citySlug}`} passHref>
-                            <Button variant="ghost" size="sm">
-                                {citySlug.charAt(0).toUpperCase() + citySlug.slice(1).replace('-', ' ')}
-                            </Button>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-        </div>
+        <HomePageClientContent
+            initialFaqItems={faqItems}
+            initialServiceInfoItems={serviceInfoItems}
+        />
     );
 } 
