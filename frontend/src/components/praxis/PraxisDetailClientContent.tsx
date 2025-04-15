@@ -128,7 +128,10 @@ export default function PraxisDetailClientContent() {
                 <div className="grid grid-cols-1 gap-8 mt-8 lg:grid-cols-3">
                     {/* Main content */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Summary Section FIRST */}
+                        {/* Services/Subtypes FIRST */}
+                        <LeistungenSection services={praxis.services} subtypes={praxis.subtypes} />
+
+                        {/* Summary Section SECOND */}
                         {praxis.analysis?.zusammenfassung && (
                             <Alert variant="default" className="bg-blue-50 border-blue-200">
                                 <ClipboardList className="h-4 w-4 text-blue-700" />
@@ -137,14 +140,10 @@ export default function PraxisDetailClientContent() {
                             </Alert>
                         )}
 
-                        {/* KI Dashboard SECOND */}
-                        {/* Pass analysis directly from praxis object now */}
+                        {/* KI Dashboard THIRD */}
                         {praxis.analysis && (
                             <KiDashboard analysisData={praxis.analysis} />
                         )}
-
-                        {/* Services THIRD */}
-                        <LeistungenSection services={praxis.services} />
 
                         {/* Description FOURTH (if exists) */}
                         {praxis.description && (

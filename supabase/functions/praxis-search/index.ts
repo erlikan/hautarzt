@@ -228,6 +228,8 @@ Deno.serve(async (req: Request, connInfo: ServeHandlerInfo) => {
         photo: p.photo,
         latitude: p.latitude ? parseFloat(p.latitude) : null,
         longitude: p.longitude ? parseFloat(p.longitude) : null,
+        category: p.category,
+        subtypes: p.subtypes,
         overall_score: analysis.overall_score ? parseFloat(analysis.overall_score) : null,
         distance: p.distance_meters ? parseFloat(p.distance_meters) : null,
         analysis_summary_snippet: analysis.zusammenfassung ? (analysis.zusammenfassung.substring(0, 150) + (analysis.zusammenfassung.length > 150 ? '...' : '')) : null,

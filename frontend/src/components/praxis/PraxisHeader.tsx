@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Globe, ExternalLink, Star, Accessibility, CreditCard, Wifi, ParkingCircle } from 'lucide-react';
+import { Phone, Globe, ExternalLink, Star, Accessibility, CreditCard, Wifi, ParkingCircle, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo } from 'react';
 import {
@@ -19,6 +19,8 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+// Import constants
+import { CORE_DERMATOLOGY_IDENTIFIERS } from '@/lib/constants';
 
 interface PraxisHeaderProps {
     praxis: PraxisDetail;
@@ -34,110 +36,84 @@ function getScoreVariant(score: number | null | undefined): "default" | "seconda
     return 'destructive'; // Use destructive for low scores
 }
 
-// Define icons for specific keys in the 'about' JSON
-const aboutIconMap: Record<string, React.ReactNode> = {
-    // Keys from Barrierefreiheit
-    "Rollstuhlgerechter Eingang": <Accessibility className="w-4 h-4" />,
-    "Rollstuhlgerechtes WC": <Accessibility className="w-4 h-4 text-blue-600" />,
-    "Rollstuhlgerechter Parkplatz": <ParkingCircle className="w-4 h-4" />, // Example icon for parking
-    // Keys from Ausstattung
-    "WC": <Accessibility className="w-4 h-4" />, // Re-using Accessibility for generic WC
-    "WLAN": <Wifi className="w-4 h-4" />,
-    // Keys from Payments
-    "Akzeptiert Kreditkarten": <CreditCard className="w-4 h-4" />,
-    // Add more based on common keys observed in the actual data
-}
-
 export default function PraxisHeader({ praxis }: PraxisHeaderProps) {
-    // Format the score with one decimal place
-    const formattedScore = praxis.analysis?.overall_score != null
-        ? praxis.analysis.overall_score.toFixed(1)
-        : 'N/A';
-
-    // Get color class based on score
+    const formattedScore = praxis.analysis?.overall_score?.toFixed(1) ?? 'N/A';
     const scoreVariant = getScoreVariant(praxis.analysis?.overall_score);
-
-    // Format phone number (remove spaces) for tel: link
     const formattedPhone = praxis.phone?.replace(/\s/g, '');
-
-    // Determine the correct link for appointment booking
     const appointmentLink = praxis.booking_appointment_link || praxis.site;
+    const isCoreDermatology = praxis.category === 'Hautarzt' ||
+        (praxis.subtypes && praxis.subtypes.some(sub => CORE_DERMATOLOGY_IDENTIFIERS.has(sub)));
 
-    // Handle appointment button click using the determined link
     const handleAppointmentClick = () => {
         if (appointmentLink) {
             window.open(appointmentLink, '_blank', 'noopener,noreferrer');
         }
     };
 
-    // Log the about data
-    // console.log("Praxis About Data:", praxis.about);
-
     return (
-        <Card className="overflow-hidden mb-8">
-            <div className="md:grid md:grid-cols-3">
-                {/* Left column (col-span-2): Details */}
-                <div className="p-6 md:col-span-2">
-                    <div className="flex items-start justify-between gap-4 mb-1">
-                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{praxis.name}</h1>
+        // Card container - no longer full grid with image
+        <Card className="overflow-hidden mb-6 border shadow-sm">
+            <div className="flex flex-col md:flex-row">
+                {/* Left Column: Main Info (takes more space) */}
+                <div className="p-5 md:p-6 flex-grow md:w-2/3">
+                    {/* Badge/Category */}
+                    <div className="mb-2">
+                        {isCoreDermatology ? (
+                            <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2 py-0.5 rounded-md">
+                                <CheckCircle className="h-3.5 w-3.5 mr-1" /> Facharzt für Dermatologie
+                            </Badge>
+                        ) : (
+                            praxis.category && <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{praxis.category}</span>
+                        )}
                     </div>
-                    <p className="text-muted-foreground mb-4 text-sm sm:text-base">
+
+                    {/* Name */}
+                    <h1 className="text-2xl font-bold tracking-tight sm:text-3xl text-gray-900 mb-1">{praxis.name}</h1>
+
+                    {/* Address */}
+                    <p className="text-muted-foreground mb-3 text-sm sm:text-base">
                         {praxis.full_address}
                         {praxis.located_in && <span className="block text-xs">({praxis.located_in})</span>}
                     </p>
 
-                    {/* Phone - Moved Before Score */}
-                    {praxis.phone && (
-                        <div className="mb-4">
-                            <a
-                                href={`tel:${formattedPhone}`}
-                                className="flex items-center gap-2 text-sm text-primary hover:underline"
-                            >
-                                <Phone className="w-4 h-4" />
-                                {praxis.phone}
-                            </a>
-                        </div>
-                    )}
-
-                    {/* Score Display - Moved After Phone */}
-                    {praxis.analysis?.overall_score != null && (
-                        <div className="mb-6 text-lg font-medium">
-                            <span className="text-muted-foreground">Gesamtscore: </span>
-                            <span className={`text-2xl font-semibold ${scoreVariant === 'default' ? 'text-green-600' :
-                                scoreVariant === 'destructive' ? 'text-red-600' :
-                                    scoreVariant === 'outline' ? 'text-yellow-600' :
-                                        'text-gray-500'
-                                }`}>{formattedScore}</span>
-                            <span className="text-sm text-muted-foreground"> / 100</span>
-                        </div>
-                    )}
-
-                    {/* Display About Icons */}
-                    {/* ... about icons ... */}
-
-                    {/* Appointment & Website Buttons */}
-                    <div className="flex flex-wrap gap-3">
-                        {/* Use appointmentLink for booking button */}
-                        {appointmentLink && (
-                            <Button size="lg" onClick={handleAppointmentClick}>
-                                Online Termin vereinbaren
-                                <ExternalLink className="w-4 h-4 ml-2" />
-                            </Button>
+                    {/* Score & Rating Row */}
+                    <div className="flex items-center gap-4 mb-4">
+                        {/* Overall Score */}
+                        {praxis.analysis?.overall_score != null && (
+                            <div className="text-lg font-medium flex items-center gap-1">
+                                <span className="text-gray-700">Score:</span>
+                                <span className={`text-xl font-semibold ${scoreVariant === 'default' ? 'text-emerald-600' :
+                                    scoreVariant === 'destructive' ? 'text-red-600' :
+                                        scoreVariant === 'outline' ? 'text-amber-600' :
+                                            'text-gray-500'
+                                    }`}>{formattedScore}
+                                </span>
+                                <span className="text-xs text-muted-foreground">/ 100</span>
+                            </div>
                         )}
-                        {/* Website button remains the same */}
-                        {praxis.site && (
-                            <Button variant="outline" asChild>
-                                <a href={praxis.site} target="_blank" rel="noopener noreferrer">
-                                    <Globe className="w-4 h-4 mr-2" /> Website besuchen
-                                </a>
-                            </Button>
+                        {/* Google Rating (Optional) */}
+                        {praxis.rating != null && praxis.reviews != null && praxis.reviews > 0 && (
+                            <div className="flex items-center text-sm text-gray-600">
+                                <Star className="w-4 h-4 mr-1 text-yellow-400 fill-current" />
+                                <span className="font-medium mr-1">{praxis.rating.toFixed(1)}</span>
+                                ({praxis.reviews} Google)
+                            </div>
                         )}
                     </div>
+
+                    {/* Contact Row: Phone & Buttons - REMOVE THIS SECTION */}
+                    {/* 
+                    <div className="flex flex-wrap items-center gap-3">
+                        {praxis.phone && ( ... phone link ... )}
+                        {appointmentLink && ( ... appointment button ... )}
+                        {praxis.site && ( ... website button ... )}
+                    </div> 
+                    */}
+
                 </div>
 
-                {/* Right column (col-span-1): Image */}
-                <div className="md:col-span-1 relative h-48 md:h-auto bg-muted">
-                    {/* Display praxis.photo if available */}
+                {/* Right Column: Image (takes less space) */}
+                <div className="md:w-1/3 relative min-h-[200px] md:min-h-full bg-muted flex-shrink-0">
                     {praxis.photo ? (
                         <Image
                             src={praxis.photo}
@@ -145,7 +121,7 @@ export default function PraxisHeader({ praxis }: PraxisHeaderProps) {
                             fill
                             className="object-cover"
                             sizes="(max-width: 768px) 100vw, 33vw"
-                            priority
+                            priority // Prioritize header image
                         />
                     ) : (
                         <div className="h-full flex items-center justify-center">
