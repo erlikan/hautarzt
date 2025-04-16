@@ -25,7 +25,8 @@
     "swr": "^2.3.3",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "@tailwindcss/typography": "^0.5.13"
   },
   "devDependencies": {
     "@types/node": "^22.13.14",
