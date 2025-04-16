@@ -81,37 +81,37 @@ export default function KiDashboard({ analysisData }: KiDashboardProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <AspectAnalysisCard
                         title="Termin/Wartezeit"
-                        positiveValue={analysisData.termin_wartezeit_positiv}
-                        neutralValue={analysisData.termin_wartezeit_neutral}
-                        negativeValue={analysisData.termin_wartezeit_negativ}
+                        positiveValue={analysisData.termin_wartezeit_positiv ?? null}
+                        neutralValue={analysisData.termin_wartezeit_neutral ?? null}
+                        negativeValue={analysisData.termin_wartezeit_negativ ?? null}
                         icon={aspectIconsMap.termin}
                     />
                     <AspectAnalysisCard
                         title="Freundlichkeit"
-                        positiveValue={analysisData.freundlichkeit_empathie_positiv}
-                        neutralValue={analysisData.freundlichkeit_empathie_neutral}
-                        negativeValue={analysisData.freundlichkeit_empathie_negativ}
+                        positiveValue={analysisData.freundlichkeit_empathie_positiv ?? null}
+                        neutralValue={analysisData.freundlichkeit_empathie_neutral ?? null}
+                        negativeValue={analysisData.freundlichkeit_empathie_negativ ?? null}
                         icon={aspectIconsMap.freundlichkeit}
                     />
                     <AspectAnalysisCard
                         title="Aufklärung/Vertrauen"
-                        positiveValue={analysisData.aufklaerung_vertrauen_positiv}
-                        neutralValue={analysisData.aufklaerung_vertrauen_neutral}
-                        negativeValue={analysisData.aufklaerung_vertrauen_negativ}
+                        positiveValue={analysisData.aufklaerung_vertrauen_positiv ?? null}
+                        neutralValue={analysisData.aufklaerung_vertrauen_neutral ?? null}
+                        negativeValue={analysisData.aufklaerung_vertrauen_negativ ?? null}
                         icon={aspectIconsMap.aufklaerung}
                     />
                     <AspectAnalysisCard
                         title="Kompetenz"
-                        positiveValue={analysisData.kompetenz_behandlung_positiv}
-                        neutralValue={analysisData.kompetenz_behandlung_neutral}
-                        negativeValue={analysisData.kompetenz_behandlung_negativ}
+                        positiveValue={analysisData.kompetenz_behandlung_positiv ?? null}
+                        neutralValue={analysisData.kompetenz_behandlung_neutral ?? null}
+                        negativeValue={analysisData.kompetenz_behandlung_negativ ?? null}
                         icon={aspectIconsMap.kompetenz}
                     />
                     <AspectAnalysisCard
                         title="Praxis/Ausstattung"
-                        positiveValue={analysisData.praxis_ausstattung_positiv}
-                        neutralValue={analysisData.praxis_ausstattung_neutral}
-                        negativeValue={analysisData.praxis_ausstattung_negativ}
+                        positiveValue={analysisData.praxis_ausstattung_positiv ?? null}
+                        neutralValue={analysisData.praxis_ausstattung_neutral ?? null}
+                        negativeValue={analysisData.praxis_ausstattung_negativ ?? null}
                         icon={aspectIconsMap.praxis}
                     />
 
