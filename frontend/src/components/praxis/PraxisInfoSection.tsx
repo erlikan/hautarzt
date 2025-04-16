@@ -118,8 +118,8 @@ export default function PraxisInfoSection({ praxis }: PraxisInfoSectionProps) {
                         <div className="mb-3 h-48 md:h-52 rounded-md overflow-hidden border bg-muted">
                             <PraxisMap
                                 name={praxis.name}
-                                latitude={praxis.latitude}
-                                longitude={praxis.longitude}
+                                latitude={praxis.latitude ?? null}
+                                longitude={praxis.longitude ?? null}
                                 address={praxis.full_address}
                             />
                         </div>
