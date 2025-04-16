@@ -122,6 +122,17 @@ export interface PraxisDetail {
 // Ensure this matches the data structure used
 export interface PraxisAnalysisData extends PraxisAnalysis { }
 
+// --- Type for Schema.org Opening Hours --- 
+// Based on https://schema.org/OpeningHoursSpecification
+export interface OpeningHoursSpecification {
+    "@type": "OpeningHoursSpecification";
+    dayOfWeek: string | string[]; // e.g., "Monday", ["Monday", "Tuesday"] or Schema.org URLs
+    opens?: string; // HH:MM or HH:MM:SS
+    closes?: string; // HH:MM or HH:MM:SS
+    validFrom?: string; // Date ISO 8601
+    validThrough?: string; // Date ISO 8601
+}
+
 // --- Types for Static Content --- 
 
 export interface FaqItem {
