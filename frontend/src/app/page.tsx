@@ -36,69 +36,57 @@ export const metadata: Metadata = {
 // Helper function to read and parse markdown files from a directory
 function getContentData<T>(directory: string): T[] {
     const contentDirectory = path.join(process.cwd(), directory);
-    console.log(`[getContentData] Attempting to read content from: ${contentDirectory}`);
+    // console.log(`[getContentData] Attempting to read content from: ${contentDirectory}`); // REMOVE LOG
     try {
         const filenames = fs.readdirSync(contentDirectory);
-        console.log(`[getContentData] Found ${filenames.length} files/dirs in ${directory}:`, filenames);
+        // console.log(`[getContentData] Found ${filenames.length} files/dirs in ${directory}:`, filenames); // REMOVE LOG
 
         const items = filenames
             .filter(filename => {
                 const isMarkdown = filename.endsWith('.md');
-                // console.log(`[getContentData] Checking ${filename}: Is Markdown? ${isMarkdown}`); // Verbose log
                 return isMarkdown;
             })
             .map((filename): T => {
-                console.log(`[getContentData] Processing file: ${filename}`);
+                // console.log(`[getContentData] Processing file: ${filename}`); // REMOVE LOG
                 const slug = filename.replace(/\.md$/, '');
                 const filePath = path.join(contentDirectory, filename);
                 const fileContents = fs.readFileSync(filePath, 'utf8');
                 const { data: frontmatter, content: markdownContent } = matter(fileContents);
-
-                // Log parsed parts for clarity
-                console.log(`[getContentData] Parsed ${filename} -> Frontmatter:`, frontmatter);
-                console.log(`[getContentData] Parsed ${filename} -> Content:`, markdownContent.substring(0, 50) + '...'); // Log start of content
+                // console.log(`[getContentData] Parsed ${filename}, frontmatter keys:`, Object.keys(frontmatter)); // REMOVE LOG
+                // console.log(`[getContentData] Parsed ${filename} -> Content:`, markdownContent.substring(0, 50) + '...'); // REMOVE LOG
 
                 let itemData: any = {
                     id: slug,
-                    ...frontmatter, // Spread the parsed frontmatter keys (question, title, etc.)
+                    ...frontmatter,
                 };
 
-                // Explicitly assign the parsed content to the correct field based on type
                 if (directory === 'content/faq') {
-                    // Trim whitespace from the content
                     itemData.answer = markdownContent.trim();
                 } else if (directory === 'content/services') {
-                    // Assign content if needed for service detail pages later
-                    // itemData.content = markdownContent; 
+                    // Add content if needed for service detail pages later
+                    itemData.content = markdownContent.trim(); // Assign trimmed content here too if needed
                 }
 
-                // Ensure required fields exist (example for FaqItem)
                 if (directory === 'content/faq' && typeof itemData.question !== 'string') {
+                    // Keep important warnings
                     console.warn(`[getContentData] Missing 'question' in frontmatter for ${filename}`);
-                    // Return null or skip if essential data is missing? Decide based on requirements.
-                    // For now, let it pass but it might cause issues later.
                 }
 
-                return itemData as T; // Cast to generic type T
+                return itemData as T;
             });
-        console.log(`[getContentData] Successfully processed ${items.length} items from ${directory}.`);
+        // console.log(`[getContentData] Successfully processed ${items.length} items from ${directory}.`); // REMOVE LOG
         return items;
     } catch (error) {
-        // Log the specific error
-        console.error(`[getContentData] Error reading content from ${directory}:`, error);
-        return []; // Return empty array on error
+        console.error(`[getContentData] Error reading content from ${directory}:`, error); // Keep error logs
+        return [];
     }
 }
 
 // This is now a Server Component
 export default async function HomePage() {
-    console.log('HomePage Server Component executing...'); // Add entry log
-    // Read static content from markdown files
-    // console.log('Reading content files...'); // Remove older log
+    // console.log('HomePage Server Component executing...'); // REMOVE LOG
     const allFaqItems = getContentData<FaqItem>('content/faq');
     const allServiceInfoItems = getContentData<ServiceInfoItem>('content/services');
-    // console.log('Raw FAQ Items Found:', allFaqItems.length); // Remove older log
-    // console.log('Raw Service Info Found:', allServiceInfoItems.length); // Remove older log
 
     // Filter and sort based on frontmatter
     const faqItems = allFaqItems
@@ -108,9 +96,7 @@ export default async function HomePage() {
     const serviceInfoItems = allServiceInfoItems
         .filter((item: any) => item.is_active !== false && item.display_on_homepage === true);
 
-    // console.log('Filtered FAQ Items to pass:', faqItems.length); // Remove older log
-    // console.log('Filtered Service Info to pass:', serviceInfoItems.length); // Remove older log
-    console.log(`HomePage passing ${faqItems.length} FAQs and ${serviceInfoItems.length} Services to client.`);
+    // console.log(`HomePage passing ${faqItems.length} FAQs and ${serviceInfoItems.length} Services to client.`); // REMOVE LOG
 
     return (
         <HomePageClientContent

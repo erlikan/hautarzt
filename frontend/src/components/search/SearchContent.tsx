@@ -192,11 +192,12 @@ export default function SearchContent() {
     }
 
     // Log length before conditional rendering
-    if (viewMode === 'list') {
-        // console.log("SearchContent: Rendering List View - Results Length:", results.length);
-    }
+    // if (viewMode === 'list') {
+    //     // console.log("SearchContent: Rendering List View - Results Length:", results.length);
+    // }
 
-    // Loading Skeleton
+    // Loading Skeleton - TEMPORARILY REMOVED FOR DEBUGGING
+    /*
     if (isLoading) {
         return (
             <TooltipProvider>
@@ -239,6 +240,7 @@ export default function SearchContent() {
             </TooltipProvider>
         );
     }
+    */
 
     // Error Display (remains similar)
     if (error) {
@@ -386,8 +388,8 @@ export default function SearchContent() {
                                                             />
                                                         </div>
                                                     )}
-                                                    {/* Content Section - Takes remaining width */}
-                                                    <div className={`p-4 flex flex-col flex-grow ${praxis.photo ? 'md:w-3/4' : 'w-full'}`}> {/* Changed padding, width */}
+                                                    {/* Content Section - Simplify conditional class */}
+                                                    <div className={`p-4 flex flex-col flex-grow ${praxis.photo ? 'md:w-3/4' : 'w-full'}`}>
                                                         {/* Badge / Category FIRST */}
                                                         <div className="mb-1 order-1">
                                                             {isCoreDermatology ? (
