@@ -472,7 +472,7 @@ export default function SearchContent() {
                                                                         <div className="inline-flex items-center text-sm font-medium text-gray-700">
                                                                             <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
                                                                             <span className="font-bold mr-1">{score.toFixed(1)}</span>
-                                                                            {(praxis.bewertung_count !== undefined && praxis.bewertung_count > 0) && (
+                                                                            {(praxis.bewertung_count && praxis.bewertung_count > 0) && (
                                                                                 <span className="ml-1 text-gray-500 text-xs">({praxis.bewertung_count} Reviews)</span>
                                                                             )}
                                                                         </div>
