@@ -128,8 +128,8 @@ export default function PraxisDetailClientContent() {
                 <div className="grid grid-cols-1 gap-8 mt-8 lg:grid-cols-3">
                     {/* Main content */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Services/Subtypes FIRST */}
-                        <LeistungenSection services={praxis.services} subtypes={praxis.subtypes} />
+                        {/* Services/Subtypes FIRST - Handle potentially undefined props */}
+                        <LeistungenSection services={praxis.services ?? null} subtypes={praxis.subtypes ?? null} />
 
                         {/* Summary Section SECOND */}
                         {praxis.analysis?.zusammenfassung && (
