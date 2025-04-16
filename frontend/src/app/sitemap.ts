@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next';
 // Import Supabase client (using direct initialization as in page.tsx)
 import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
 
 // Define the base URL for your site - IMPORTANT: Replace with your production URL
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.hautarzt-vergleich.de'; // Fallback needed
@@ -110,23 +112,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 4. Service Detail Pages (/leistungen/[slug])
     let servicePages: MetadataRoute.Sitemap = [];
     try {
-        // Fetch slugs for active service pages 
-        const { data: services, error: serviceError } = await supabase
-            .from('service_info') // Assuming table exists and is populated
-            .select('slug, updated_at') // Include updated_at if available
-            .eq('is_active', true);
+        // Read slugs from filenames in the content directory
+        const contentDirectory = path.join(process.cwd(), 'frontend/content/services'); // Adjusted path relative to root
+        const filenames = fs.readdirSync(contentDirectory);
 
-        if (serviceError) throw serviceError;
-
-        servicePages = (services || []).map((service) => ({
-            url: `${BASE_URL}/leistungen/${service.slug}`,
-            lastModified: service.updated_at ? new Date(service.updated_at) : new Date(),
-            changeFrequency: 'monthly',
-            priority: 0.7,
-        }));
-        console.log(`[sitemap.ts] Found ${servicePages.length} service pages.`);
+        servicePages = filenames
+            .filter(filename => filename.endsWith('.md')) // Only process markdown files
+            .map(filename => {
+                const slug = filename.replace(/\.md$/, '');
+                // Optional: Read frontmatter to get lastModified date if available?
+                // For now, using current date.
+                return {
+                    url: `${BASE_URL}/leistungen/${slug}`,
+                    lastModified: new Date(), // TODO: Get last mod date from file system or frontmatter?
+                    changeFrequency: 'monthly',
+                    priority: 0.7,
+                };
+            });
+        console.log(`[sitemap.ts] Found ${servicePages.length} service pages from files.`);
     } catch (error) {
-        console.error("[sitemap.ts] Error fetching service slugs:", error);
+        console.error("[sitemap.ts] Error reading service files:", error);
+        // Check if the directory exists
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            console.error(`[sitemap.ts] Directory not found: ${path.join(process.cwd(), 'frontend/content/services')}`);
+        }
     }
 
     // Combine all URLs
