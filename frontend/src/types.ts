@@ -102,6 +102,7 @@ export interface PraxisDetail {
     city_slug?: string | null;
     located_in?: string | null;
     business_status?: string | null;
+    country_code?: string | null; // <<< ADDED FIELD
     updated_at?: string | null;
     description?: string | null;
     // Potentially add bewertung_count if it comes from praxis table
