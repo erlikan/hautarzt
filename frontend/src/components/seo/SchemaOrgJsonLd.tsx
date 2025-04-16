@@ -58,9 +58,22 @@ function parseWorkingHours(workingHours: any): OpeningHoursSpecification[] | nul
         const groupedResult = result.reduce((acc, spec) => {
             const key = `${spec.opens}-${spec.closes}`;
             if (!acc[key]) {
-                acc[key] = { ...spec, dayOfWeek: [] };
+                // Initialize with the first spec found for this time slot.
+                // Ensure dayOfWeek is initialized as an array here.
+                acc[key] = {
+                    ...spec,
+                    dayOfWeek: Array.isArray(spec.dayOfWeek) ? spec.dayOfWeek : [spec.dayOfWeek] // Ensure it's an array
+                };
+            } else {
+                // If key exists, add the current day(s) to the existing dayOfWeek array
+                const currentDay = Array.isArray(spec.dayOfWeek) ? spec.dayOfWeek[0] : spec.dayOfWeek; // Get the day string
+                // Ensure acc[key].dayOfWeek is an array before pushing
+                if (!Array.isArray(acc[key].dayOfWeek)) {
+                    // This case shouldn't happen if initialized correctly, but safety check
+                    acc[key].dayOfWeek = [acc[key].dayOfWeek];
+                }
+                acc[key].dayOfWeek.push(currentDay);
             }
-            acc[key].dayOfWeek.push(...spec.dayOfWeek);
             return acc;
         }, {} as Record<string, OpeningHoursSpecification>);
 
