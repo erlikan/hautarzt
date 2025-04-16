@@ -113,7 +113,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     let servicePages: MetadataRoute.Sitemap = [];
     try {
         // Read slugs from filenames in the content directory
-        const contentDirectory = path.join(process.cwd(), 'frontend/content/services'); // Adjusted path relative to root
+        const contentDirectory = path.join(process.cwd(), 'content/services');
+        console.log(`[sitemap.ts] Reading services from: ${contentDirectory}`); // Add log for corrected path
         const filenames = fs.readdirSync(contentDirectory);
 
         servicePages = filenames
@@ -134,7 +135,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         console.error("[sitemap.ts] Error reading service files:", error);
         // Check if the directory exists
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            console.error(`[sitemap.ts] Directory not found: ${path.join(process.cwd(), 'frontend/content/services')}`);
+            // Log the corrected path in the error message as well
+            console.error(`[sitemap.ts] Directory not found: ${path.join(process.cwd(), 'content/services')}`);
         }
     }
 
