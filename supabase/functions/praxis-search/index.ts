@@ -231,7 +231,7 @@ Deno.serve(async (req: Request, connInfo: ServeHandlerInfo) => {
         category: p.category,
         subtypes: p.subtypes,
         overall_score: analysis.overall_score ? parseFloat(analysis.overall_score) : null,
-        distance: p.distance_meters ? parseFloat(p.distance_meters) : null,
+        distance_meters: p.distance_meters ? parseFloat(p.distance_meters) : null,
         analysis_summary_snippet: analysis.zusammenfassung ? (analysis.zusammenfassung.substring(0, 150) + (analysis.zusammenfassung.length > 150 ? '...' : '')) : null,
         analysis_tags: analysis.tags?.slice(0, 3) || [],
         analysis_aspects_status: {
@@ -244,7 +244,8 @@ Deno.serve(async (req: Request, connInfo: ServeHandlerInfo) => {
         offered_service_names: analysis.services || [],
         award_badges: [],
         business_status: p.business_status,
-        located_in: p.located_in
+        located_in: p.located_in,
+        bewertung_count: p.reviews !== null && p.reviews !== undefined ? Number(p.reviews) : null
       };
     });
 

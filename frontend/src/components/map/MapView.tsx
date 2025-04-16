@@ -218,8 +218,8 @@ const MapView: React.FC<MapViewProps> = ({ praxen }) => {
                                         </>
                                     )}
                                 </div>
-                                {/* Assuming stadt data is still available */}
-                                <Link href={praxis.stadt?.slug ? `/hautarzt/${praxis.stadt.slug}/${praxis.slug}` : '#'} passHref>
+                                {/* Link construction needs to use top-level slugs from PraxisSummary */}
+                                <Link href={praxis.city_slug && praxis.slug ? `/hautarzt/${praxis.city_slug}/${praxis.slug}` : '#'} passHref>
                                     <Button variant="link" size="sm" className="p-0 h-auto">Details anzeigen</Button>
                                 </Link>
                             </Popup>
