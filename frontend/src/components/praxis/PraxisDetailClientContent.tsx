@@ -140,7 +140,7 @@ export default function PraxisDetailClientContent() {
                             </Alert>
                         )}
 
-                        {/* KI Dashboard THIRD */}
+                        {/* KI Dashboard THIRD - Conditionally render */}
                         {praxis.analysis && (
                             <KiDashboard analysisData={praxis.analysis} />
                         )}

@@ -120,7 +120,7 @@ export default function PraxisInfoSection({ praxis }: PraxisInfoSectionProps) {
                                 name={praxis.name}
                                 latitude={praxis.latitude ?? null}
                                 longitude={praxis.longitude ?? null}
-                                address={praxis.full_address}
+                                address={praxis.full_address ?? ''}
                             />
                         </div>
                         {/* Address & Directions */}
