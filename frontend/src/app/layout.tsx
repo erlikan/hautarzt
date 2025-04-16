@@ -66,21 +66,61 @@ export default function RootLayout({
                     <main className="flex-grow">
                         {children}
                     </main>
-                    {/* --- Original Footer Structure --- */}
-                    <footer className="border-t py-8 md:py-10 mt-auto bg-muted/50">
-                        <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
-                            <p className="text-sm text-muted-foreground text-center md:text-left">
-                                {/* TODO: Maybe add Logo here too? */}
-                                &copy; {new Date().getFullYear()} Hautarzt Vergleich. Alle Rechte vorbehalten.
-                            </p>
-                            <nav className="flex gap-4 sm:gap-6">
-                                <Link href="/impressum" className="text-sm text-muted-foreground hover:text-primary">
-                                    Impressum
-                                </Link>
-                                <Link href="/datenschutz" className="text-sm text-muted-foreground hover:text-primary">
-                                    Datenschutz
-                                </Link>
-                            </nav>
+                    {/* --- Footer Structure Refined --- */}
+                    <footer className="border-t mt-auto bg-gray-50">
+                        <div className="container px-6 py-8 md:py-10">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-8">
+                                {/* Column 1: Logo & Name (Optional) / Navigation */}
+                                <div>
+                                    <Link href="/" className="flex items-center space-x-2 mb-3">
+                                        <Image
+                                            src="/logo-64.png"
+                                            alt="Hautarzt Vergleich Logo"
+                                            width={32}
+                                            height={32}
+                                        />
+                                        <span className="font-semibold text-lg">Hautarzt Vergleich</span>
+                                    </Link>
+                                    <p className="text-sm text-muted-foreground">
+                                        Finden Sie den passenden Hautarzt in Ihrer Nähe.
+                                    </p>
+                                </div>
+
+                                {/* Column 2: Navigation Links */}
+                                <div>
+                                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Navigation</h3>
+                                    <nav className="flex flex-col space-y-2">
+                                        <Link href="/" className="text-sm text-muted-foreground hover:text-primary hover:underline">Startseite</Link>
+                                        <Link href="/leistungen" className="text-sm text-muted-foreground hover:text-primary hover:underline">Leistungen</Link>
+                                        <Link href="/kontakt" className="text-sm text-muted-foreground hover:text-primary hover:underline">Kontakt</Link>
+                                        {/* Add more links if needed */}
+                                    </nav>
+                                </div>
+
+                                {/* Column 3: Legal Links */}
+                                <div>
+                                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Rechtliches</h3>
+                                    <nav className="flex flex-col space-y-2">
+                                        <Link href="/impressum" className="text-sm text-muted-foreground hover:text-primary hover:underline">
+                                            Impressum
+                                        </Link>
+                                        <Link href="/datenschutz" className="text-sm text-muted-foreground hover:text-primary hover:underline">
+                                            Datenschutz
+                                        </Link>
+                                        {/* Add Sitemap Link */}
+                                        <a href="/sitemap.xml" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary hover:underline">
+                                            Sitemap
+                                        </a>
+                                    </nav>
+                                </div>
+                            </div>
+
+                            {/* Bottom Row: Copyright */}
+                            <div className="border-t pt-6 text-center">
+                                <p className="text-xs text-muted-foreground">
+                                    &copy; {new Date().getFullYear()} Hautarzt Vergleich. Alle Rechte vorbehalten.
+                                </p>
+                            </div>
                         </div>
                     </footer>
                 </div>
