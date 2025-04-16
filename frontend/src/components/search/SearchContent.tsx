@@ -469,15 +469,14 @@ export default function SearchContent() {
                                                                 {/* Left side: Score & Review Count */}
                                                                 <div className="flex flex-wrap gap-2 items-center">
                                                                     {hasScore && (
-                                                                        <div className="inline-flex items-center text-sm font-medium text-gray-700"> {/* Slightly larger text */}
+                                                                        <div className="inline-flex items-center text-sm font-medium text-gray-700">
                                                                             <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
                                                                             <span className="font-bold mr-1">{score.toFixed(1)}</span>
-                                                                            {praxis.bewertung_count !== undefined && praxis.bewertung_count > 0 && (
-                                                                                <span className="text-gray-500 text-xs">({praxis.bewertung_count} Reviews)</span> {/* Added context */} 
+                                                                            {(praxis.bewertung_count !== undefined && praxis.bewertung_count > 0) && (
+                                                                                <span className="ml-1 text-gray-500 text-xs">({praxis.bewertung_count} Reviews)</span>
                                                                             )}
                                                                         </div>
                                                                     )}
-
                                                                 </div>
                                                                 {/* Right side: Aspect Icons */}
                                                                 <div className="flex items-center space-x-1.5">
