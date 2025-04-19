@@ -57,6 +57,8 @@ DECLARE
     v_where_conditions TEXT[] := ARRAY['p.business_status != ''CLOSED_PERMANENTLY'''];
     v_join_services_clause TEXT := ''; -- Initialize empty join clause for services
     v_final_where_clause TEXT;
+    -- Added variable for ORDER BY clause
+    v_order_by_clause TEXT;
 BEGIN
     -- Origin Point (for distance calculation/sorting)
     IF _geo_lat IS NOT NULL AND _geo_lon IS NOT NULL THEN
@@ -104,15 +106,81 @@ BEGIN
        END IF;
     END IF;
 
+    -- Determine ORDER BY clause based on input
+    IF _sort_by = 'distance' AND _origin IS NOT NULL THEN
+         -- Sort primarily by distance, then relevance, then score
+         v_order_by_clause := format(
+            'ORDER BY distance_meters ASC NULLS LAST, relevance_tier ASC, calculated_sort_score DESC NULLS LAST, p.google_place_id ASC'
+         );
+    ELSIF _sort_by = 'name' THEN
+         -- Sort by name only
+         v_order_by_clause := format(
+            'ORDER BY p.name %s NULLS LAST, p.google_place_id ASC',
+            CASE WHEN _sort_direction = 'asc' THEN 'ASC' ELSE 'DESC' END
+         );
+    ELSE -- Default to 'overall_score' or any other case (sort by relevance then score)
+        v_order_by_clause := format(
+            'ORDER BY relevance_tier ASC, calculated_sort_score DESC NULLS %s, p.google_place_id ASC',
+            CASE WHEN _sort_direction = 'asc' THEN 'FIRST' ELSE 'LAST' END -- Ensure NULL scores are last when sorting DESC
+        );
+    END IF;
 
-    -- Base query structure with CTE
-    RETURN QUERY EXECUTE format('\n        WITH FilteredPraxis AS (\n            SELECT p.google_place_id\n            FROM praxis p\n            LEFT JOIN praxis_analysis pa ON p.google_place_id = pa.praxis_google_place_id\n            %1$s -- Service Join Placeholder\n            %2$s -- WHERE Clause Placeholder\n        ), TotalCount AS (\n           SELECT count(*) as total FROM FilteredPraxis\n        )\n        SELECT\n           tc.total,\n           p.google_place_id, p.slug, p.name, p.full_address, p.city,\n           p.city_slug, -- Select the pre-computed city_slug\n           p.postal_code,\n           p.latitude::numeric, p.longitude::numeric, p.photo, p.booking_appointment_link, p.about,\n           -- Add category and subtypes to SELECT list
-           p.category, p.subtypes, \n           -- Build analysis JSON object (Correctly escaped quotes)
-           jsonb_build_object(\n                \'\'overall_score\'\', pa.overall_score,\n                \'\'termin_wartezeit_positiv\'\', pa.termin_wartezeit_positiv, \'\'termin_wartezeit_negativ\'\', pa.termin_wartezeit_negativ,\n                \'\'freundlichkeit_empathie_positiv\'\', pa.freundlichkeit_empathie_positiv, \'\'freundlichkeit_empathie_negativ\'\', pa.freundlichkeit_empathie_negativ,\n                \'\'aufklaerung_vertrauen_positiv\'\', pa.aufklaerung_vertrauen_positiv, \'\'aufklaerung_vertrauen_negativ\'\', pa.aufklaerung_vertrauen_negativ,\n                \'\'kompetenz_behandlung_positiv\'\', pa.kompetenz_behandlung_positiv, \'\'kompetenz_behandlung_negativ\'\', pa.kompetenz_behandlung_negativ,\n                \'\'praxis_ausstattung_positiv\'\', pa.praxis_ausstattung_positiv, \'\'praxis_ausstattung_negativ\'\', pa.praxis_ausstattung_negativ,\n                \'\'zusammenfassung\'\', pa.zusammenfassung,\n                \'\'tags\'\', pa.tags,\n                \'\'services\'\', (SELECT jsonb_agg(s.name) FROM praxis_service ps_agg JOIN service s ON s.id = ps_agg.service_id WHERE ps_agg.praxis_google_place_id = p.google_place_id)\n           ) as analysis,\n           -- Distance Calculation\n           (CASE WHEN %3$L IS NOT NULL THEN ST_Distance(p.location::geography, %3$L::geography) ELSE NULL END)::numeric as distance_meters,\n           p.business_status, p.located_in,\n           p.reviews\n        FROM praxis p\n        JOIN FilteredPraxis fp ON p.google_place_id = fp.google_place_id\n        CROSS JOIN TotalCount tc\n        LEFT JOIN praxis_analysis pa ON p.google_place_id = pa.praxis_google_place_id\n        ORDER BY\n            -- Sorting Logic (Correctly escaped quotes)
-            CASE WHEN %4$L = \'\'distance\'\' AND %3$L IS NOT NULL THEN ST_Distance(p.location::geography, %3$L::geography) ELSE NULL END %5$s NULLS LAST,\n            CASE WHEN %4$L = \'\'name\'\' THEN p.name ELSE NULL END %5$s NULLS LAST,\n            CASE WHEN %4$L = \'\'overall_score\'\' THEN pa.overall_score ELSE NULL END %5$s NULLS %6$s,\n            p.google_place_id ASC -- Tie-breaker\n        LIMIT %7$L OFFSET %8$L;\n        ',\n        v_join_services_clause, -- %1$s\n        v_final_where_clause, -- %2$s\n        _origin, -- %3$L (_geo_lat/_geo_lon)\n        _sort_by, -- %4$L\n        CASE WHEN _sort_direction = 'asc' THEN 'ASC' ELSE 'DESC' END, -- %5$s
-        CASE WHEN _sort_direction = 'asc' THEN 'FIRST' ELSE 'LAST' END, -- %6$s (for overall_score NULLS position)
-        _page_size, -- %7$L
-        _offset -- %8$L
+    -- Base query structure with CTE (Corrected quoting inside format string)
+    RETURN QUERY EXECUTE format(' 
+        WITH RelevantPraxis AS ( -- Renamed CTE for clarity
+            SELECT 
+                p.google_place_id,
+                -- Calculate Relevance Tier
+                CASE
+                    WHEN p.category = ''Hautarzt'' OR p.subtypes @> ARRAY[''Hautarzt'', ''Allergologe'', ''Venerologe'', ''Kinderdermatologe'']::text[] THEN 1
+                    WHEN p.category IN (''Hausarzt'', ''Allgemeinmediziner'') OR p.subtypes @> ARRAY[''Hausarzt'', ''Allgemeinmediziner'']::text[] THEN 2
+                    ELSE 3
+                END as relevance_tier,
+                -- Calculate Combined Score (Custom Score > Google Rating*20 > 0)
+                COALESCE(pa.overall_score, p.rating * 20, 0) as calculated_sort_score,
+                -- Calculate Distance
+                (CASE WHEN %3$L IS NOT NULL THEN ST_Distance(p.location::geography, %3$L::geography) ELSE NULL END)::numeric as distance_meters
+            FROM praxis p
+            LEFT JOIN praxis_analysis pa ON p.google_place_id = pa.praxis_google_place_id 
+            %1$s -- Service Join Placeholder
+            %2$s -- WHERE Clause Placeholder
+        ), TotalCount AS (
+           SELECT count(*) as total FROM RelevantPraxis
+        )
+        SELECT
+           tc.total,
+           p.google_place_id, p.slug, p.name, p.full_address, p.city,
+           p.city_slug,
+           p.postal_code,
+           p.latitude::numeric, p.longitude::numeric, p.photo, p.booking_appointment_link, p.about,
+           p.category, p.subtypes,
+           jsonb_build_object( -- Analysis JSON
+                ''overall_score'', pa.overall_score,
+                ''termin_wartezeit_positiv'', pa.termin_wartezeit_positiv, ''termin_wartezeit_negativ'', pa.termin_wartezeit_negativ,
+                ''freundlichkeit_empathie_positiv'', pa.freundlichkeit_empathie_positiv, ''freundlichkeit_empathie_negativ'', pa.freundlichkeit_empathie_negativ,
+                ''aufklaerung_vertrauen_positiv'', pa.aufklaerung_vertrauen_positiv, ''aufklaerung_vertrauen_negativ'', pa.aufklaerung_vertrauen_negativ,
+                ''kompetenz_behandlung_positiv'', pa.kompetenz_behandlung_positiv, ''kompetenz_behandlung_negativ'', pa.kompetenz_behandlung_negativ,
+                ''praxis_ausstattung_positiv'', pa.praxis_ausstattung_positiv, ''praxis_ausstattung_negativ'', pa.praxis_ausstattung_negativ,
+                ''zusammenfassung'', pa.zusammenfassung,
+                ''tags'', pa.tags,
+                ''services'', (SELECT jsonb_agg(s.name) FROM praxis_service ps_agg JOIN service s ON s.id = ps_agg.service_id WHERE ps_agg.praxis_google_place_id = p.google_place_id)
+           ) as analysis,
+           rp.distance_meters, -- Get distance from CTE
+           p.business_status, p.located_in,
+           p.reviews
+        FROM praxis p
+        JOIN RelevantPraxis rp ON p.google_place_id = rp.google_place_id
+        CROSS JOIN TotalCount tc
+        LEFT JOIN praxis_analysis pa ON p.google_place_id = pa.praxis_google_place_id -- Join again for analysis JSON
+        %4$s -- ORDER BY Clause Placeholder
+        LIMIT %5$L OFFSET %6$L;
+        ', 
+        v_join_services_clause, -- %1$s
+        v_final_where_clause,   -- %2$s
+        _origin,                -- %3$L 
+        v_order_by_clause,      -- %4$s (Pass the constructed ORDER BY clause)
+        _page_size,             -- %5$L
+        _offset                 -- %6$L
     );
 
 END;$function$ 

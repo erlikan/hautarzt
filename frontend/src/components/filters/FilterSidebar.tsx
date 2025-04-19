@@ -81,7 +81,7 @@ export default function FilterSidebar({
                 {/* Optional: Add a button to clear all filters */}
             </CardHeader>
             <CardContent className="p-4">
-                <Accordion type="multiple" className="w-full" defaultValue={['item-leistungen', 'item-score', 'item-patiententyp']}>
+                <Accordion type="multiple" className="w-full" defaultValue={['item-score', 'item-patiententyp']}>
                     <AccordionItem value="item-leistungen">
                         <AccordionTrigger className="text-base font-semibold hover:no-underline">
                             Leistungen
