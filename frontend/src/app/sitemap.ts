@@ -8,7 +8,7 @@ import path from 'path';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.hautarzt-vergleich.de'; // Fallback needed
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    console.log('[sitemap.ts] Generating sitemap...');
+    // console.log('[sitemap.ts] Generating sitemap...'); // REMOVE
 
     // Initialize Supabase client
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -77,9 +77,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'weekly',
             priority: 0.8,
         }));
-        console.log(`[sitemap.ts] Found ${cityPages.length} unique city pages.`);
+        // console.log(`[sitemap.ts] Found ${cityPages.length} unique city pages.`); // REMOVE
     } catch (error) {
-        console.error("[sitemap.ts] Error fetching city slugs:", error);
+        console.error("[sitemap.ts] Error fetching city slugs:", error); // Keep error log
     }
 
     // 3. Praxis Detail Pages (/hautarzt/[stadtSlug]/[praxisSlug])
@@ -104,9 +104,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'monthly',
             priority: 0.6,
         }));
-        console.log(`[sitemap.ts] Found ${praxisPages.length} praxis pages.`);
+        // console.log(`[sitemap.ts] Found ${praxisPages.length} praxis pages.`); // REMOVE
     } catch (error) {
-        console.error("[sitemap.ts] Error fetching praxis slugs:", error);
+        console.error("[sitemap.ts] Error fetching praxis slugs:", error); // Keep error log
     }
 
     // 4. Service Detail Pages (/leistungen/[slug])
@@ -114,7 +114,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     try {
         // Read slugs from filenames in the content directory
         const contentDirectory = path.join(process.cwd(), 'content/services');
-        console.log(`[sitemap.ts] Reading services from: ${contentDirectory}`); // Add log for corrected path
+        // console.log(`[sitemap.ts] Reading services from: ${contentDirectory}`); // REMOVE
         const filenames = fs.readdirSync(contentDirectory);
 
         servicePages = filenames
@@ -130,7 +130,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                     priority: 0.7,
                 };
             });
-        console.log(`[sitemap.ts] Found ${servicePages.length} service pages from files.`);
+        // console.log(`[sitemap.ts] Found ${servicePages.length} service pages from files.`); // REMOVE
     } catch (error) {
         console.error("[sitemap.ts] Error reading service files:", error);
         // Check if the directory exists
@@ -148,6 +148,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...servicePages,
     ];
 
-    console.log(`[sitemap.ts] Generated total ${allUrls.length} URLs.`);
+    // console.log(`[sitemap.ts] Generated total ${allUrls.length} URLs.`); // REMOVE
     return allUrls;
 } 

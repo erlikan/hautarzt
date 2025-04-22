@@ -41,7 +41,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Import the constants
 import { CORE_DERMATOLOGY_IDENTIFIERS, HIGHLIGHT_SERVICE_KEYWORDS, MAX_HIGHLIGHT_SNIPPETS } from '@/lib/constants';
 import Image from 'next/image'; // Import Next Image
-import { CheckCircle, MapPin } from 'lucide-react'; // Icons for badge/snippet
+import { CheckCircle, MapPin, Navigation } from 'lucide-react'; // Icons for badge/snippet and Navigation
+// Import formatDistance
+import { formatDistance } from "@/lib/utils";
 
 // Define Sort Options (copied from StadtPage)
 type SortOption = 'score' | 'name';
@@ -353,6 +355,10 @@ export default function SearchContent() {
                                         ];
                                         const addedHighlights = new Set<string>(); // Avoid duplicate keywords
 
+                                        // --- ADD: Format distance --- 
+                                        const formattedDist = formatDistance(praxis.distance_meters);
+                                        // --- END ADD ---
+
                                         for (const sourceItem of combinedSources) {
                                             if (highlights.length >= MAX_HIGHLIGHT_SNIPPETS) break;
                                             const lowerSourceItem = sourceItem.toLowerCase();
@@ -402,14 +408,17 @@ export default function SearchContent() {
                                                         </div>
                                                         {/* Title SECOND */}
                                                         <h3 className="text-lg font-semibold text-gray-800 mb-0.5 order-2 group-hover:text-blue-700 line-clamp-1">{praxis.name}</h3>
-                                                        {/* Location THIRD (+ Located In) */}
-                                                        <div className="mb-2 order-3">
-                                                            <p className="text-sm text-gray-500 flex items-center">
+                                                        {/* Location THIRD (+ Located In + Distance) */}
+                                                        <div className="mb-2 order-3 flex items-center text-sm text-gray-500 flex-wrap gap-x-2">
+                                                            <span className="flex items-center">
                                                                 <MapPin className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
-                                                                {praxis.city || praxis.postal_code}
-                                                            </p>
-                                                            {praxis.located_in && (
-                                                                <p className="ml-[18px] text-xs text-muted-foreground">({praxis.located_in})</p>
+                                                                {praxis.city || praxis.postal_code} {praxis.located_in ? `(${praxis.located_in})` : ''}
+                                                            </span>
+                                                            {/* Display formatted distance if available */}
+                                                            {formattedDist && (
+                                                                <span className="flex items-center text-xs text-gray-500">
+                                                                    <Navigation className="h-3 w-3 mr-0.5" /> {formattedDist}
+                                                                </span>
                                                             )}
                                                         </div>
 
@@ -469,14 +478,23 @@ export default function SearchContent() {
                                                                 {/* Left side: Score & Review Count */}
                                                                 <div className="flex flex-wrap gap-2 items-center">
                                                                     {hasScore && (
-                                                                        <div className="inline-flex items-center text-sm font-medium text-gray-700">
-                                                                            <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
+                                                                        // Display score and add indicator based on source tier
+                                                                        <div className={`inline-flex items-center text-sm font-medium rounded-full px-2 py-0.5 ${praxis.score_source_tier === 1 ? 'text-emerald-900 bg-emerald-100' // AI Score
+                                                                            : praxis.score_source_tier === 2 ? 'text-blue-900 bg-blue-100' // Google-based Score
+                                                                                : 'text-gray-700 bg-gray-100' // Should not happen if hasScore is true, but fallback
+                                                                            }`}>
+                                                                            <Star className="h-3.5 w-3.5 mr-1 text-yellow-400 fill-current" />
                                                                             <span className="font-bold mr-1">{score.toFixed(1)}</span>
-                                                                            {(praxis.bewertung_count && praxis.bewertung_count > 0) && (
-                                                                                <span className="ml-1 text-gray-500 text-xs">({praxis.bewertung_count} Reviews)</span>
-                                                                            )}
                                                                         </div>
                                                                     )}
+                                                                    {/* Review Count Badge (Show even if no score?) */}
+                                                                    {(praxis.bewertung_count && praxis.bewertung_count > 0) && (
+                                                                        <div className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full text-gray-600 bg-gray-100">
+                                                                            <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                                                                            {praxis.bewertung_count} Bewertungen
+                                                                        </div>
+                                                                    )}
+
                                                                 </div>
                                                                 {/* Right side: Aspect Icons */}
                                                                 <div className="flex items-center space-x-1.5">

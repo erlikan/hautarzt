@@ -16,8 +16,9 @@ class ApiError extends Error {
     }
 }
 
-// Interface for search parameters - REVISED for new API structure
+// Interface for search parameters
 export interface SearchPraxenParams {
+    query?: string; // Add the general query term
     // Primary context (usually from URL)
     contextCitySlug?: string;
     // Optional filters
@@ -37,6 +38,25 @@ export interface SearchPraxenParams {
 
 // API functions
 export const apiService = {
+    // --- Private Helper to get Base URL --- 
+    _getBaseUrl() {
+        // For server-side calls (like metadata generation), use absolute URL
+        // For client-side, relative is fine
+        // Check if running on server using typeof window
+        if (typeof window === 'undefined') {
+            // Use environment variable configured for your deployment
+            // Ensure NEXT_PUBLIC_BASE_URL is set in Vercel/Netlify/Docker env
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'; // Fallback for local server build
+            if (!baseUrl.startsWith('http')) {
+                console.warn('Invalid NEXT_PUBLIC_BASE_URL for server-side fetch');
+                return 'http://localhost:3000'; // Safer fallback
+            }
+            return baseUrl;
+        }
+        // For client-side calls, relative URL is sufficient
+        return '';
+    },
+
     // Get list of all services
     async getServices(): Promise<Service[]> {
         try {
@@ -56,43 +76,47 @@ export const apiService = {
         }
     },
 
-    // Get practice details by slug - TODO: Refactor to use /api/praxis-details endpoint
+    // Get practice details by slug - REVERT TO DIRECT SUPABASE QUERY
     async getPraxisDetailBySlug(stadtSlug: string, praxisSlug: string): Promise<PraxisDetail | null> {
         try {
-            // TEMPORARY - Replace with fetch call to Edge Function
-            // Explicitly select required fields, including new ones
+            // Use Supabase client directly again
             const selectQuery = `
                 *,
                 analysis:praxis_analysis(*),
-                services:service(*)
+                services:service(id, name)
             `;
 
             const { data, error } = await supabase
-                .from('praxis') // Correct table name
+                .from('praxis')
                 .select(selectQuery)
                 .eq('slug', praxisSlug)
-                // .eq('city_slug', stadtSlug) // Need a city slug column or different filter logic
-                .single();
+                // Add back city slug filter for uniqueness if needed
+                .eq('city_slug', stadtSlug)
+                .maybeSingle();
 
             if (error) {
                 console.error('Error fetching praxis details:', error);
-                return null;
+                // Throw ApiError for consistency
+                throw new ApiError(`Database error fetching details: ${error.message}`, 500);
             }
-            // TODO: Need proper mapping to PraxisDetail type from function response
-            return data as any; // Cast needed until fetch/mapping is done
+            if (!data) {
+                throw new ApiError(`Praxis not found for slug: ${stadtSlug}/${praxisSlug}`, 404);
+            }
+
+            // Cast needed as Supabase client returns joined data nested
+            return data as PraxisDetail;
         } catch (err) {
-            console.error('Exception in getPraxisDetailBySlug:', err);
-            return null;
+            console.error(`Exception in getPraxisDetailBySlug (${stadtSlug}/${praxisSlug}):`, err);
+            if (err instanceof ApiError) throw err;
+            throw new ApiError('Failed to load practice details.', 500);
         }
     },
 
-    // Search praxen using the Edge Function - REVISED to use new params
+    // Search praxen using the Edge Function
     async searchPraxen(params: SearchPraxenParams): Promise<{ data: PraxisSummary[]; meta: any }> {
         try {
             const queryParams = new URLSearchParams();
-
-            // Map SearchPraxenParams keys to query string keys expected by the Edge Function
-            // (Names might differ slightly, adjust if needed)
+            // ... (param mapping remains the same) ...
             if (params.contextCitySlug) queryParams.append('stadtSlug', params.contextCitySlug);
             if (params.filterPostalCode) queryParams.append('plz', params.filterPostalCode);
             if (params.filterServiceIds && params.filterServiceIds.length > 0) {
@@ -112,8 +136,11 @@ export const apiService = {
             if (params.sortDirection) queryParams.append('sortDirection', params.sortDirection);
             if (params.page) queryParams.append('page', String(params.page));
             if (params.pageSize) queryParams.append('pageSize', String(params.pageSize));
+            // Add the query parameter if it exists
+            if (params.query) queryParams.append('query', params.query);
 
-            const searchUrl = `/api/praxis-search?${queryParams.toString()}`;
+            // --- Use base URL --- 
+            const searchUrl = `${this._getBaseUrl()}/api/praxis-search?${queryParams.toString()}`;
 
             const response = await fetch(searchUrl, {
                 method: 'GET',
@@ -125,51 +152,41 @@ export const apiService = {
             if (!response.ok) {
                 let errorBody = 'Unknown error';
                 try {
-                    // Try to parse error body as JSON first
                     const errorJson = await response.json();
                     errorBody = errorJson.error || JSON.stringify(errorJson);
                 } catch (e) {
-                    // Fallback to text if JSON parsing fails
                     try {
                         errorBody = await response.text();
-                    } catch (textErr) {
-                        // Ignore if text body also fails
-                    }
+                    } catch (textErr) { }
                 }
                 console.error('Search request failed:', response.status, errorBody);
-                // Throw custom error with status and message
                 throw new ApiError(`Search request failed: ${errorBody}`, response.status);
             }
-
             const result = await response.json();
-
             if (!result || !result.data || !Array.isArray(result.data)) {
                 console.warn("API Service: No valid data array received.");
-                // Consider throwing an error here too if needed
                 return { data: [], meta: result.meta || {} };
             }
-
             const responseData: PraxisSummary[] = result.data || [];
             return { data: responseData, meta: result.meta || {} };
 
         } catch (err) {
-            // Check if it's already an ApiError, otherwise wrap it
+            // ... (error handling remains the same) ...
             if (err instanceof ApiError) {
                 console.error(`ApiError in searchPraxen (${err.status}):`, err.message);
-                throw err; // Re-throw the original ApiError
+                throw err;
             } else {
-                // Wrap other errors (e.g., network errors) for consistency
                 let errorMessage = 'An unexpected error occurred';
-                if (err instanceof Error) { // Check if err is an Error instance
+                if (err instanceof Error) {
                     errorMessage = err.message;
                 }
-                console.error('Exception in searchPraxen:', err); // Log the original error
-                throw new ApiError(errorMessage, 500); // Default to 500 for unknown fetch errors
+                console.error('Exception in searchPraxen:', err);
+                throw new ApiError(errorMessage, 500);
             }
         }
     },
 
-    // Get analysis data - Keep as is for now, but might be redundant if details endpoint includes it
+    // Get analysis data - TODO: Remove if detail endpoint includes everything
     async getPraxisAnalysisData(praxisId: string): Promise<PraxisAnalysisData | null> {
         try {
             const { data, error } = await supabase

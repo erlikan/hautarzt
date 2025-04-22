@@ -34,4 +34,12 @@ export const HIGHLIGHT_SERVICE_KEYWORDS = [
 ];
 
 // Maximum number of highlight snippets to show on a card
-export const MAX_HIGHLIGHT_SNIPPETS = 3; 
+export const MAX_HIGHLIGHT_SNIPPETS = 3;
+
+// --- Constants for Search/Redirect ---
+
+// Basic regex for German 5-digit ZIP codes
+export const GERMAN_ZIP_REGEX = /^\d{5}$/;
+
+// Max length for search queries to prevent abuse
+export const MAX_QUERY_LENGTH = 100; 

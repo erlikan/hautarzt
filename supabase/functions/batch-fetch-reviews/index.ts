@@ -42,6 +42,9 @@ const triggerReviewScrape = async (googlePlaceId: string) => {
     }
 }
 
+// Add a simple comment to force redeploy recognition
+// Deployment attempt: [Current Timestamp or Version]
+
 serve(async (req) => {
     // 1. Handle CORS (though likely not needed for cron)
     if (req.method === 'OPTIONS') {
@@ -57,9 +60,17 @@ serve(async (req) => {
         console.log(`Fetching up to ${BATCH_SIZE} practices needing review fetch...`)
         const { data: practicesToFetch, error: selectError } = await supabaseAdmin
             .from('praxis')
-            .select('google_place_id') // Only need the ID
-            .or('apify_review_status.is.null,apify_review_status.eq.needs_fetch,apify_review_status.eq.fetch_failed') // Fetch null, needs_fetch, or failed ones (for retry)
-            // Optional: Add criteria like WHERE updated_at < now() - interval '1 day' to avoid retrying failed ones too quickly
+            .select('google_place_id, reviews') // Select reviews count as well
+            // Apply review filters first
+            .neq('reviews', 0)
+            .not('reviews', 'is', null)
+            // Then apply OR condition for statuses
+            .or(
+                'apify_review_status.is.null,' +
+                'apify_review_status.eq.needs_fetch,' +
+                'apify_review_status.eq.fetch_failed,' +
+                'apify_review_status.eq.fetching' // Still using simplified fetching check
+            )
             .limit(BATCH_SIZE)
 
         if (selectError) {

@@ -130,27 +130,52 @@ serve(async (req: Request) => {
 
         // 5. Prepare data for Supabase insertion
         const reviewsToInsert = reviews
-            // REMOVE filter for missing reviewId, as we use Delete-then-Insert
-            // .filter(review => review.reviewId && review.reviewId.trim() !== '')
+            // REMOVE Filter for missing reviewId 
+            // .filter(review => review.reviewId && review.reviewId.trim() !== '') 
+            // Keep Filter: Remove reviews without actual text content
+            .filter(review => review.text && review.text.trim() !== '')
             .map(review => ({
                 praxis_google_place_id: praxisGooglePlaceIdFromUrl,
-                // google_review_id might be null now, which is acceptable with Delete-then-Insert
-                google_review_id: review.reviewId,
+                google_review_id: review.reviewId, // Can be null now
                 review_text: review.text,
                 review_rating: review.stars,
                 author_reviews_count: review.reviewerNumberOfReviews,
                 author_ratings_count: review.likesCount,
                 review_link: review.reviewUrl,
+                // Parse date, default to null if invalid/missing
                 review_datetime_utc: review.publishedAtDate ? new Date(review.publishedAtDate).toISOString() : null,
-            }))
+            }));
 
+        // Log how many were filtered due to missing text OR (now removed) missing reviewId
+        const reviewsFetchedCount = reviews.length;
+        const reviewsWithTextCount = reviews.filter(review => review.text && review.text.trim() !== '').length;
+        const filteredOutCount = reviewsFetchedCount - reviewsWithTextCount;
+
+        if (filteredOutCount > 0) {
+            // Update log message to only mention missing text
+            console.log(`[${praxisGooglePlaceIdFromUrl}] Filtered out ${filteredOutCount} reviews due to missing text.`);
+        }
+
+        // Handle case where NO valid reviews remain after filtering
         if (reviewsToInsert.length === 0) {
-            if (reviews.length > 0) {
-                console.warn(`All ${reviews.length} fetched reviews were filtered out. Reasons: missing 'reviewId' or invalid/missing 'publishedAtDate'.`)
+            if (reviewsFetchedCount > 0) {
+                // Update warning message - filtering is only due to text now
+                console.warn(`All ${reviewsFetchedCount} fetched reviews were filtered out due to missing text content.`)
             } else {
-                console.log('No reviews fetched or all had invalid data.')
+                console.log('No reviews fetched from Apify dataset.') // More accurate message
             }
-            return new Response(JSON.stringify({ success: true, message: 'No matching reviews to insert.' }), {
+            // Still update status to fetched/pending even if no reviews inserted, as Apify run was successful
+            const { error: statusUpdateError } = await supabaseAdmin
+                .from('praxis')
+                .update({
+                    apify_review_status: 'fetched',
+                    analysis_status: 'pending'
+                })
+                .eq('google_place_id', praxisGooglePlaceIdFromUrl)
+            if (statusUpdateError) {
+                console.error(`Failed to update praxis status for ${praxisGooglePlaceIdFromUrl} after 0 reviews inserted:`, statusUpdateError)
+            }
+            return new Response(JSON.stringify({ success: true, message: 'No usable reviews with text found to insert.' }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 200,
             })

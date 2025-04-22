@@ -20,12 +20,16 @@ import FilterSidebar from '../filters/FilterSidebar';
 import MapView from '../map/MapView';
 import { CORE_DERMATOLOGY_IDENTIFIERS, HIGHLIGHT_SERVICE_KEYWORDS, MAX_HIGHLIGHT_SNIPPETS } from '@/lib/constants';
 import Image from 'next/image'; // Import Next Image
-import { CheckCircle, MapPin } from 'lucide-react'; // Icons for badge/snippet
+import { CheckCircle, MapPin, Navigation } from 'lucide-react'; // Icons for badge/snippet and Navigation
+import { formatDistance } from "@/lib/utils"; // Import formatDistance
 
 // --- Types and Helper Functions (Can be moved to utils) ---
 type SortOption = 'score' | 'name';
 type ViewMode = 'list' | 'map';
 type PatientTypeFilter = 'alle' | 'kasse' | 'privat';
+
+// Define allowed sort values here
+const ALLOWED_SORT_BY: SortOption[] = ['score', 'name'];
 
 function capitalizeCity(slug: string): string {
     if (!slug) return '';
@@ -62,6 +66,9 @@ export default function StadtPageClientContent() {
     const lonParam = queryParams.get('lon');
     const plzFilter = queryParams.get('plz'); // Get plz filter from URL
 
+    // --- Determine if it's a nearby search ---
+    const isNearbySearch = stadtSlug === 'nearby';
+
     // State for data, loading, error
     const [loadingPraxen, setLoadingPraxen] = useState(true);
     const [loadingServices, setLoadingServices] = useState(true);
@@ -74,8 +81,14 @@ export default function StadtPageClientContent() {
     const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
     const [minScore, setMinScore] = useState<number | null>(null);
     const [patientType, setPatientType] = useState<PatientTypeFilter>('alle');
-    const [sortBy, setSortBy] = useState<SortOption>('score');
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+    // --- UPDATE: Set initial sort based on search type ---
+    const [sortBy, setSortBy] = useState<SortOption | 'distance'>(
+        isNearbySearch ? 'distance' : 'score' // Default to distance for nearby
+    );
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
+        isNearbySearch ? 'asc' : 'desc' // Default to asc for distance
+    );
+    // --- END UPDATE ---
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [viewMode, setViewMode] = useState<ViewMode>('list');
 
@@ -122,8 +135,8 @@ export default function StadtPageClientContent() {
                     setLoadingPraxen(false);
                     return;
                 }
-                // Add radius for nearby search
-                searchApiParams.geoRadiusMeters = 20000; // Example radius
+                // Add radius for nearby search - CHANGED TO 10000
+                searchApiParams.geoRadiusMeters = 10000; // Use 10km
                 // Ensure contextCitySlug is undefined for nearby
                 searchApiParams.contextCitySlug = undefined;
             } else if (!stadtSlug) {
@@ -166,10 +179,13 @@ export default function StadtPageClientContent() {
     const handleScoreFilterChange = useCallback((score: number | null) => { setMinScore(score); setCurrentPage(1); }, []);
     const handlePatientTypeChange = useCallback((type: PatientTypeFilter) => { setPatientType(type); setCurrentPage(1); }, []);
     const handleSortChange = useCallback((value: string) => {
-        const [newSortBy, newSortDirection] = value.split('-') as [SortOption, 'asc' | 'desc'];
-        setSortBy(newSortBy);
-        setSortDirection(newSortDirection);
-        setCurrentPage(1);
+        const [newSortBy, newSortDirection] = value.split('-') as [SortOption | 'distance', 'asc' | 'desc'];
+        // Check if newSortBy is a valid type before setting state
+        if ([...ALLOWED_SORT_BY, 'distance'].includes(newSortBy)) {
+            setSortBy(newSortBy);
+            setSortDirection(newSortDirection);
+            setCurrentPage(1);
+        }
     }, []);
     const handlePageChange = useCallback((newPage: number) => {
         setCurrentPage(newPage);
@@ -252,7 +268,25 @@ export default function StadtPageClientContent() {
                         </div>
                         {/* ... Header: Sort, View Toggle ... */}
                         <div className="flex items-center gap-4 pt-1">
-                            {/* ... Sort Select ... */}
+                            {/* --- UPDATE: Sort Dropdown --- */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">Sortieren:</span>
+                                <Select value={`${sortBy}-${sortDirection}`} onValueChange={handleSortChange}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Sortieren nach..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {/* Add Distance option only if nearby search */}
+                                        {isNearbySearch && (
+                                            <SelectItem value="distance-asc">Entfernung</SelectItem>
+                                        )}
+                                        <SelectItem value="score-desc">Beste Bewertung</SelectItem>
+                                        <SelectItem value="score-asc">Schlechteste Bewertung</SelectItem>
+                                        <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                                        <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="flex items-center rounded-md border p-1 bg-muted">
                                 <Button
                                     variant={viewMode === 'list' ? 'secondary' : 'ghost'}
@@ -294,6 +328,10 @@ export default function StadtPageClientContent() {
                                             ...(praxis.analysis_tags || [])
                                         ];
                                         const addedHighlights = new Set<string>();
+
+                                        // --- ADD: Format distance --- 
+                                        const formattedDist = formatDistance(praxis.distance_meters);
+                                        // --- END ADD ---
 
                                         for (const sourceItem of combinedSources) {
                                             if (highlights.length >= MAX_HIGHLIGHT_SNIPPETS) break;
@@ -344,14 +382,17 @@ export default function StadtPageClientContent() {
                                                         </div>
                                                         {/* Title SECOND */}
                                                         <h3 className="text-lg font-semibold text-gray-800 mb-0.5 order-2 group-hover:text-blue-700 line-clamp-1">{praxis.name}</h3>
-                                                        {/* Location THIRD (+ Located In) */}
-                                                        <div className="mb-2 order-3">
-                                                            <p className="text-sm text-gray-500 flex items-center">
+                                                        {/* Location THIRD (+ Located In + Distance) */}
+                                                        <div className="mb-2 order-3 flex items-center text-sm text-gray-500 flex-wrap gap-x-2">
+                                                            <span className="flex items-center">
                                                                 <MapPin className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
-                                                                {praxis.city || praxis.postal_code}
-                                                            </p>
-                                                            {praxis.located_in && (
-                                                                <p className="ml-[18px] text-xs text-muted-foreground">({praxis.located_in})</p>
+                                                                {praxis.city || praxis.postal_code} {praxis.located_in ? `(${praxis.located_in})` : ''}
+                                                            </span>
+                                                            {/* Display formatted distance if available */}
+                                                            {formattedDist && (
+                                                                <span className="flex items-center text-xs text-gray-500">
+                                                                    <Navigation className="h-3 w-3 mr-0.5" /> {formattedDist}
+                                                                </span>
                                                             )}
                                                         </div>
 
@@ -411,15 +452,22 @@ export default function StadtPageClientContent() {
                                                                 {/* Left side: Score & Review Count */}
                                                                 <div className="flex flex-wrap gap-2 items-center">
                                                                     {hasScore && (
-                                                                        <div className="inline-flex items-center text-sm font-medium text-gray-700"> {/* Slightly larger text */}
-                                                                            <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
+                                                                        // Display score and add indicator based on source tier
+                                                                        <div className={`inline-flex items-center text-sm font-medium rounded-full px-2 py-0.5 ${praxis.score_source_tier === 1 ? 'text-emerald-900 bg-emerald-100' // AI Score
+                                                                            : praxis.score_source_tier === 2 ? 'text-blue-900 bg-blue-100' // Google-based Score
+                                                                                : 'text-gray-700 bg-gray-100' // Fallback
+                                                                            }`}>
+                                                                            <Star className="h-3.5 w-3.5 mr-1 text-yellow-400 fill-current" />
                                                                             <span className="font-bold mr-1">{score.toFixed(1)}</span>
-                                                                            {(praxis.bewertung_count && praxis.bewertung_count > 0) && (
-                                                                                <span className="text-gray-500 text-xs">({praxis.bewertung_count} Reviews)</span>
-                                                                            )}
                                                                         </div>
                                                                     )}
-
+                                                                    {/* Review Count Badge */}
+                                                                    {(praxis.bewertung_count && praxis.bewertung_count > 0) && (
+                                                                        <div className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full text-gray-600 bg-gray-100">
+                                                                            <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                                                                            {praxis.bewertung_count} Bewertungen
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                                 {/* Right side: Aspect Icons */}
                                                                 <div className="flex items-center space-x-1.5">

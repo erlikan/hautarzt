@@ -71,7 +71,7 @@ export default function KiDashboard({ analysisData }: KiDashboardProps) {
         // Use Card as the main container
         <Card>
             <CardHeader>
-                <CardTitle>KI Patienten-Einblicke</CardTitle>
+                <CardTitle>Patienten-Einblicke</CardTitle>
                 <CardDescription>
                     Analyse basierend auf Patientenbewertungen und öffentlichen Daten.
                 </CardDescription>

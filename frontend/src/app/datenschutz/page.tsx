@@ -10,14 +10,14 @@ export const metadata: Metadata = {
 export default function DatenschutzPage() {
     // !! WICHTIG: Alle [Platzhalter] MÜSSEN durch Ihre korrekten Daten ersetzt werden! !!
     // !! Dies ist KEINE Rechtsberatung. Konsultieren Sie einen Anwalt!         !!
-    const siteOperatorName = "[Ihr Name / Firmenname]"; // Same as Impressum
-    const siteOperatorStreet = "[Ihre Straße und Hausnummer]"; // Same as Impressum
-    const siteOperatorCity = "[Ihre PLZ und Stadt]"; // Same as Impressum
-    const siteContactEmail = "[Ihre Kontakt-E-Mail-Adresse]"; // Same as Impressum
-    const lastUpdatedDate = "[Datum der letzten Aktualisierung, z.B. TT.MM.JJJJ]";
-    const hostingProviderInfo = "[Name und Adresse Ihres Hosting-Providers, z.B. Vercel Inc., Netlify Inc.]"; // Replace!
-    const analyticsToolInfo = "[Falls Sie ein Analysetool wie Plausible, Fathom, Matomo oder Google Analytics nutzen, hier Details einfügen, sonst löschen]"; // Replace or Delete!
-    const cookieConsentToolInfo = "[Falls Sie einen Cookie-Consent-Manager nutzen, hier Details einfügen, sonst löschen]"; // Replace or Delete!
+    const siteOperatorName = "Cvelop Web & Internet Technologies"; // Same as Impressum
+    const siteOperatorStreet = "Ammerswilerstrasse 35"; // Same as Impressum
+    const siteOperatorCity = "5600 Lenzburg / Schweiz"; // Same as Impressum
+    const siteContactEmail = "info@hautarzt-vergleich.de"; // Same as Impressum
+    const lastUpdatedDate = "April.2025]";
+    const hostingProviderInfo = "Hetzner Online GmbH, Industriestr. 25, 90596 Nuremberg, Germany"; // Replace!
+    const analyticsToolInfo = ""; // Replace or Delete!
+    const cookieConsentToolInfo = "Cookie Consent Tool von Cvelop"; // Replace or Delete!
 
     return (
         <div className="container py-12 md:py-16">

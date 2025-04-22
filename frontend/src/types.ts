@@ -20,6 +20,8 @@ export interface PraxisSummary {
     analysis_tags?: string[] | null;
     analysis_aspects_status?: PraxisAnalysisAspectStatus | null;
     distance_meters?: number | null;
+    // Add score source tier
+    score_source_tier?: number | null; // 1=AI, 2=Google-based, 3=None
     // Fields potentially missing based on previous context - ensure they are needed/returned by SP
     offered_service_names?: string[];
     award_badges?: string[];

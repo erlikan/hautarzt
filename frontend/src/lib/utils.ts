@@ -51,3 +51,22 @@ export function getInitials(name: string): string {
   if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
+
+/**
+ * Formats distance in meters to a readable string (km or m).
+ */
+export const formatDistance = (distanceInMeters: number | null | undefined): string | null => {
+  if (distanceInMeters === null || distanceInMeters === undefined || isNaN(distanceInMeters)) {
+    return null;
+  }
+
+  if (distanceInMeters < 1000) {
+    // Round to nearest 10m for distances under 1km
+    const roundedMeters = Math.round(distanceInMeters / 10) * 10;
+    return `ca. ${roundedMeters} m`;
+  } else {
+    const distanceInKm = distanceInMeters / 1000;
+    // Show one decimal place for km
+    return `ca. ${distanceInKm.toFixed(1).replace('.', ',')} km`;
+  }
+};

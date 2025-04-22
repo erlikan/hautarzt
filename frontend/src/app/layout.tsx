@@ -63,7 +63,8 @@ export default function RootLayout({
                             </div>
                         </div>
                     </header>
-                    <main className="flex-grow">
+                    {/* Apply container and padding to main content area */}
+                    <main className="flex-grow flex-1 container px-4 py-6 md:py-8">
                         {children}
                     </main>
                     {/* --- Footer Structure Refined --- */}

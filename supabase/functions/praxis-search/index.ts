@@ -182,14 +182,14 @@ Deno.serve(async (req: Request, connInfo: ServeHandlerInfo) => {
   const rpcParams = {
     _context_city_slug: contextCitySlug,
     _filter_postal_code: filterPostalCode,
-    _filter_service_ids: filterServiceIds, // Use processed array or undefined
-    _filter_min_score: filterMinScore, // Use processed number or undefined
-    _geo_lat: geoLat, // Use validated number or undefined
-    _geo_lon: geoLon, // Use validated number or undefined
-    _geo_radius_meters: geoRadiusMeters, // Use validated number or undefined
-    _sort_by: sortBy, // Use validated/defaulted value
-    _sort_direction: sortDirection, // Use validated/defaulted value
-    _page_size: pageSize, // Use validated/defaulted value
+    _filter_service_ids: filterServiceIds,
+    _filter_min_score: filterMinScore,
+    _geo_lat: geoLat,
+    _geo_lon: geoLon,
+    _geo_radius_meters: geoRadiusMeters,
+    _sort_by: sortBy,
+    _sort_direction: sortDirection,
+    _page_size: pageSize,
     _offset: offset
   };
 
@@ -217,6 +217,17 @@ Deno.serve(async (req: Request, connInfo: ServeHandlerInfo) => {
 
     const responseData = items.map((p: any) => {
       const analysis = p.analysis || {};
+      // Determine the final score to display
+      const displayScore = analysis.overall_score !== null && analysis.overall_score !== undefined
+        ? parseFloat(analysis.overall_score)
+        : (p.calculated_sort_score !== null && p.calculated_sort_score !== undefined
+          ? parseFloat(p.calculated_sort_score)
+          : null);
+      // Get the score source tier
+      const scoreTier = p.score_availability_tier !== null && p.score_availability_tier !== undefined
+        ? Number(p.score_availability_tier)
+        : 3; // Default to tier 3 (no score) if missing
+
       return {
         google_place_id: p.google_place_id,
         slug: p.slug,
@@ -230,8 +241,16 @@ Deno.serve(async (req: Request, connInfo: ServeHandlerInfo) => {
         longitude: p.longitude ? parseFloat(p.longitude) : null,
         category: p.category,
         subtypes: p.subtypes,
-        overall_score: analysis.overall_score ? parseFloat(analysis.overall_score) : null,
+        located_in: p.located_in,
+        business_status: p.business_status,
+        bewertung_count: p.reviews !== null && p.reviews !== undefined ? Number(p.reviews) : null,
         distance_meters: p.distance_meters ? parseFloat(p.distance_meters) : null,
+
+        // Use the determined score and tier
+        overall_score: displayScore,
+        score_source_tier: scoreTier,
+
+        // Keep analysis details separate but available if needed
         analysis_summary_snippet: analysis.zusammenfassung ? (analysis.zusammenfassung.substring(0, 150) + (analysis.zusammenfassung.length > 150 ? '...' : '')) : null,
         analysis_tags: analysis.tags?.slice(0, 3) || [],
         analysis_aspects_status: {
@@ -243,9 +262,6 @@ Deno.serve(async (req: Request, connInfo: ServeHandlerInfo) => {
         },
         offered_service_names: analysis.services || [],
         award_badges: [],
-        business_status: p.business_status,
-        located_in: p.located_in,
-        bewertung_count: p.reviews !== null && p.reviews !== undefined ? Number(p.reviews) : null
       };
     });
 

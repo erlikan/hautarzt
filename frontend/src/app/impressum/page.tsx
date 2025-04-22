@@ -8,14 +8,14 @@ export const metadata: Metadata = {
 export default function ImpressumPage() {
     // !! WICHTIG: Alle [Platzhalter] MÜSSEN durch Ihre korrekten Daten ersetzt werden! !!
     // !! Dies ist KEINE Rechtsberatung. Konsultieren Sie einen Anwalt!         !!
-    const siteOperatorName = "[Ihr Name / Firmenname]";
-    const siteOperatorStreet = "[Ihre Straße und Hausnummer]";
-    const siteOperatorCity = "[Ihre PLZ und Stadt]";
-    const siteRepresentative = "[Name des Vertretungsberechtigten]"; // z.B. Sie selbst, wenn Einzelunternehmer
-    const siteContactEmail = "[Ihre Kontakt-E-Mail-Adresse]"; // Dieselbe wie im Datenschutz
-    const siteContactPhone = "[Ihre Telefonnummer (Optional)]";
+    const siteOperatorName = "Cvelop Web & Internet Technologies";
+    const siteOperatorStreet = "Ammerswilerstrasse 35";
+    const siteOperatorCity = "5600 Lenzburg / Schweiz";
+    const siteRepresentative = "Cagatay Ulukan"; // z.B. Sie selbst, wenn Einzelunternehmer
+    const siteContactEmail = "info@hautarzt-vergleich.de"; // Dieselbe wie im Datenschutz
+    const siteContactPhone = "";
     const responsiblePerson = "[Name des Verantwortlichen für journalistisch-redaktionelle Inhalte]"; // Oft identisch mit Betreiber/Vertreter
-    const responsiblePersonAddress = "[Anschrift des Verantwortlichen (falls abweichend)]"; // Oft identisch mit Betreiber
+    const responsiblePersonAddress = ""; // Oft identisch mit Betreiber
 
     return (
         <div className="container py-12 md:py-16">

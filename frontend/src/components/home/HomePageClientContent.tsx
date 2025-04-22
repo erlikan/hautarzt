@@ -1,17 +1,28 @@
 'use client'; // <<< Add this directive
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useDebouncedCallback } from 'use-debounce'; // Import debounce hook
 // Shadcn UI / Lucide Imports
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Search, MapPin, Clock, Heart, ShieldCheck, AlertCircle, Navigation, CheckCircle, Smile, Award, ChevronRight } from 'lucide-react';
+import { Search, MapPin, Clock, Heart, ShieldCheck, AlertCircle, Navigation, CheckCircle, Smile, Award, ChevronRight, Link as LinkIcon, Building } from 'lucide-react';
 import Image from 'next/image';
+// Import Command component for autocomplete
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput, // We might use a regular Input instead
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover" // For dropdown
 // Import types from central location
 import type { FaqItem, ServiceInfoItem } from '@/types'; // Adjust path if needed
 // Use default import for ReactMarkdown
@@ -44,6 +55,17 @@ const popularCities: CityData[] = [
     { slug: 'leipzig', name: 'Leipzig', imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Leipzig_von_oben_-_panoramio_%281%29.jpg/1920px-Leipzig_von_oben_-_panoramio_%281%29.jpg' }, // Replace with a clearly licensed image URL
 ];
 
+// Type for disambiguation options
+interface DisambiguationOption {
+    name: string;
+    slug: string;
+}
+
+interface Suggestion {
+    name: string;
+    slug: string;
+}
+
 interface HomePageClientContentProps {
     initialFaqItems: FaqItem[];
     initialServiceInfoItems: ServiceInfoItem[];
@@ -57,20 +79,82 @@ export default function HomePageClientContent({
 }: HomePageClientContentProps) {
     // Log received props ONCE on mount
     useEffect(() => {
-        console.log('[HomePageClientContent] Initial FAQ Items Prop:', initialFaqItems);
-        console.log('[HomePageClientContent] Initial Service Info Prop:', initialServiceInfoItems);
+        // console.log('[HomePageClientContent] Initial FAQ Items Prop:', initialFaqItems);
+        // console.log('[HomePageClientContent] Initial Service Info Prop:', initialServiceInfoItems);
     }, [initialFaqItems, initialServiceInfoItems]); // Run only when props change
 
     const router = useRouter();
     const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [locationError, setLocationError] = useState<string | null>(null); // Separate location error
+    // --- NEW STATE --- 
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
+    const [disambiguationOptions, setDisambiguationOptions] = useState<Suggestion[] | null>(null);
+
+    // --- State for Autocomplete --- 
+    const [allCities, setAllCities] = useState<Suggestion[]>([]);
+    const [inputValue, setInputValue] = useState('');
+    const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+    // --- Fetch static city data on mount ---
+    useEffect(() => {
+        const fetchCities = async () => {
+            try {
+                const response = await fetch('/data/city-suggestions.json');
+                if (!response.ok) throw new Error('Failed to fetch city data');
+                const data: Suggestion[] = await response.json();
+                setAllCities(data);
+                // console.log(`[HomePage] Loaded ${data.length} cities for suggestions.`);
+            } catch (fetchError) {
+                // console.error("Error loading city suggestions:", fetchError);
+                // Handle error - maybe show a message?
+            }
+        };
+        fetchCities();
+    }, []); // Empty dependency array means run once on mount
+
+    // --- Debounced input handler (updates suggestions) --- 
+    const handleFilterSuggestions = useDebouncedCallback((value: string) => {
+        if (value.length >= 2) {
+            const lowerValue = value.toLowerCase();
+            const filtered = allCities.filter(city =>
+                city.name.toLowerCase().includes(lowerValue) || // Use includes for broader matching
+                city.slug.toLowerCase().includes(lowerValue)
+            ).slice(0, 7);
+            setSuggestions(filtered);
+            // console.log("Suggestions updated:", filtered); 
+        } else {
+            setSuggestions([]);
+        }
+    }, 300);
+
+    // --- Handler for CommandInput value change ---
+    const handleInputValueChange = (search: string) => {
+        setInputValue(search); // Update the raw input value state
+        handleFilterSuggestions(search); // Trigger the debounced suggestion filtering
+        // Keep popover open while typing if it was already open
+        if (!isPopoverOpen && search.length >= 2) {
+            // This might fight with manual popover trigger, Command usually handles list visibility
+            // Let's rely on Popover onOpenChange and CommandEmpty for visibility logic.
+        }
+    };
+
+    // --- Handle suggestion selection --- 
+    const handleSuggestionSelect = (slug: string) => {
+        // console.log(`Suggestion selected: ${slug}`);
+        setInputValue('');
+        setSuggestions([]);
+        setIsPopoverOpen(false);
+        router.push(`/hautarzt/${slug}`);
+    };
 
     // Assign props to local constants
     const faqItems = initialFaqItems;
     const serviceInfoItems = initialServiceInfoItems;
 
     const handleLocationClick = () => {
-        setError(null);
+        setLocationError(null);
         if ('geolocation' in navigator) {
             setIsLoadingLocation(true);
             navigator.geolocation.getCurrentPosition(
@@ -80,19 +164,84 @@ export default function HomePageClientContent({
                     setIsLoadingLocation(false);
                 },
                 (err) => {
-                    console.error('Geolocation error:', err);
-                    setError('Der Standort konnte nicht ermittelt werden. Bitte erteilen Sie die Berechtigung oder versuchen Sie es später erneut.');
+                    // console.error('Geolocation error:', err);
+                    setLocationError('Der Standort konnte nicht ermittelt werden. Bitte erteilen Sie die Berechtigung oder versuchen Sie es später erneut.');
                     setIsLoadingLocation(false);
                 }
             );
         } else {
-            setError('Ihr Browser unterstützt keine Standortermittlung. Bitte geben Sie Ihren Ort manuell ein.');
+            setLocationError('Ihr Browser unterstützt keine Standortermittlung. Bitte geben Sie Ihren Ort manuell ein.');
         }
     };
 
     const handleNearbySearchClick = () => {
         handleLocationClick();
     }
+
+    // --- Handler for explicit search submission ---
+    const handleSearchSubmit = async (currentValue: string) => {
+        const query = currentValue.trim();
+        // console.log(`[handleSearchSubmit] Query: ${query}`);
+
+        if (!query) {
+            setSearchError("Bitte geben Sie eine PLZ oder Stadt ein.");
+            return;
+        }
+
+        setIsSearching(true);
+        setSearchError(null);
+        setDisambiguationOptions(null);
+        setIsPopoverOpen(false); // Close popover on submit
+
+        try {
+            // console.log(`[handleSearchSubmit] Fetching /api/search-redirect?q=${encodeURIComponent(query)}`);
+            const response = await fetch(`/api/search-redirect?q=${encodeURIComponent(query)}`);
+            // console.log(`[handleSearchSubmit] Fetch response status: ${response.status}, ok: ${response.ok}`);
+
+            if (!response.ok) {
+                let errorMsg = 'Suche fehlgeschlagen. Bitte versuchen Sie es erneut.';
+                try {
+                    const errorJson = await response.json();
+                    errorMsg = errorJson.error || errorMsg;
+                } catch (_) { /* Ignore */ }
+                // console.error("[handleSearchSubmit] Fetch response not OK:", errorMsg);
+                throw new Error(errorMsg);
+            }
+
+            const contentType = response.headers.get("content-type");
+            // console.log(`[handleSearchSubmit] Response Content-Type: ${contentType}`);
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const result = await response.json();
+                // console.log("[handleSearchSubmit] Received JSON result:", result);
+                if (result.type === 'disambiguation' && result.options?.length > 0) {
+                    // console.log("[handleSearchSubmit] Setting disambiguation options.");
+                    setDisambiguationOptions(result.options);
+                } else if (result.type === 'no_match') {
+                    setSearchError(`Keine Stadt oder PLZ für "${query}" gefunden. Bitte Eingabe prüfen.`);
+                } else {
+                    // console.log("[handleSearchSubmit] Unexpected JSON format or no options.");
+                    setSearchError('Unerwartete Antwort vom Server.');
+                }
+            } else {
+                // console.log(`[handleSearchSubmit] Response not JSON. Final URL: ${response.url}`);
+                if (response.url && response.url !== new URL(`/api/search-redirect?q=${encodeURIComponent(query)}`, window.location.origin).toString()) {
+                    // console.log(`[handleSearchSubmit] Redirect detected, navigating to: ${response.url}`);
+                    const relativePath = new URL(response.url).pathname + new URL(response.url).search;
+                    router.push(relativePath);
+                } else {
+                    // console.warn("[handleSearchSubmit] Non-JSON, non-redirected response received.");
+                    setSearchError("Die Suche konnte nicht verarbeitet werden. Versuchen Sie es mit der PLZ.");
+                }
+            }
+
+        } catch (error: any) {
+            // console.error("[handleSearchSubmit] Error in try block:", error);
+            setSearchError(error.message || 'Ein Fehler ist aufgetreten.');
+        } finally {
+            // console.log("[handleSearchSubmit] Setting isSearching to false.");
+            setIsSearching(false);
+        }
+    };
 
     // --- RETURN JSX --- 
     return (
@@ -108,46 +257,119 @@ export default function HomePageClientContent({
                             Mit echten Patienteneinblicken zu Wartezeit, Freundlichkeit und Kompetenz.
                         </p>
 
-                        {/* Search Form Card - Enhanced */}
+                        {/* Search Area - Refactored Popover & Command */}
                         <Card className="max-w-2xl mx-auto mb-6 shadow-lg">
                             <CardContent className="p-5 md:p-6">
-                                <form action="/api/search-redirect" method="GET" className="space-y-4">
-                                    <div>
-                                        <Label htmlFor="searchLocation" className="sr-only">PLZ oder Stadt</Label>
-                                        <Input
-                                            id="searchLocation"
-                                            name="q" // Name used by action
-                                            type="text"
-                                            placeholder="PLZ oder Stadt eingeben..."
-                                            disabled={isLoadingLocation}
-                                            required
-                                            className="text-base py-3 px-4"
-                                        />
-                                    </div>
+                                <div className="space-y-4">
+                                    {/* Popover wrapping the Command */}
+                                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={isPopoverOpen}
+                                                className="w-full justify-start text-base py-3 px-4 pl-10 h-auto text-left font-normal relative text-muted-foreground data-[state=open]:text-foreground" // Adjust text color based on state
+                                                disabled={isLoadingLocation || isSearching}
+                                            >
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" />
+                                                {/* Display selected value or placeholder */}
+                                                {inputValue || "PLZ oder Stadt eingeben..."}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                                            <Command shouldFilter={false}>
+                                                <CommandInput
+                                                    placeholder="PLZ oder Stadt suchen..."
+                                                    value={inputValue}
+                                                    onValueChange={handleInputValueChange} // Use specific handler
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Escape') {
+                                                            setIsPopoverOpen(false);
+                                                        } else if (e.key === 'Enter' && inputValue.trim()) {
+                                                            // Allow Enter to trigger search only if NO suggestions are selected/highlighted
+                                                            // (Command's internal state handles Enter on suggestion selection)
+                                                            const selectedValue = (e.target as HTMLInputElement).getAttribute('aria-activedescendant');
+                                                            if (!selectedValue) { // Check if a suggestion is active
+                                                                handleSearchSubmit(inputValue);
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                                <CommandList>
+                                                    {/* Show message only when input is present but no suggestions */}
+                                                    <CommandEmpty>
+                                                        {inputValue.length >= 2 && suggestions.length === 0
+                                                            ? 'Keine Stadt gefunden.'
+                                                            : (inputValue.length < 2 ? 'Mind. 2 Buchstaben tippen...' : null)}
+                                                    </CommandEmpty>
+                                                    {/* Render suggestions only if input is long enough */}
+                                                    {(inputValue.length >= 2 && suggestions.length > 0) && (
+                                                        <CommandGroup>
+                                                            {suggestions.map((suggestion) => (
+                                                                <CommandItem
+                                                                    key={suggestion.slug}
+                                                                    value={`${suggestion.name} ${suggestion.slug}`}
+                                                                    onSelect={() => handleSuggestionSelect(suggestion.slug)}
+                                                                    className="cursor-pointer"
+                                                                >
+                                                                    <Building className="mr-2 h-4 w-4" />
+                                                                    <span>{suggestion.name}</span>
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    )}
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
 
-                                    {error && (
+                                    {/* Display location or search errors */}
+                                    {(locationError || searchError) && (
                                         <Alert variant="destructive" className="text-xs">
                                             <AlertCircle className="h-4 w-4" />
-                                            <AlertDescription>{error}</AlertDescription>
+                                            <AlertDescription>{locationError || searchError}</AlertDescription>
                                         </Alert>
                                     )}
+                                    {/* Display Disambiguation Options */}
+                                    {disambiguationOptions && (
+                                        <div className="pt-2 text-sm">
+                                            <p className="font-medium mb-2">Meinten Sie:</p>
+                                            <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                                {disambiguationOptions.map(opt => (
+                                                    <Link key={opt.slug} href={`/hautarzt/${opt.slug}`} className="text-blue-600 hover:underline hover:text-blue-800 flex items-center gap-1">
+                                                        <LinkIcon className="w-3 h-3" /> {opt.name}
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-2">Oder versuchen Sie es mit der PLZ.</p>
+                                        </div>
+                                    )}
 
+                                    {/* Buttons Row */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                        <Button type="submit" size="lg" className="w-full text-base">
-                                            <Search className="w-4 h-4 mr-2" /> Hautärzte finden
+                                        {/* Explicit Search Button */}
+                                        <Button
+                                            type="button"
+                                            size="lg"
+                                            className="w-full text-base bg-blue-600 hover:bg-blue-700 text-white" // Restored primary style
+                                            disabled={isSearching || isLoadingLocation || !inputValue.trim()}
+                                            onClick={() => handleSearchSubmit(inputValue)}
+                                        >
+                                            {isSearching ? 'Suche...' : <><Search className="w-4 h-4 mr-2" /> Hautärzte finden</>}
                                         </Button>
+                                        {/* Nearby Button */}
                                         <Button
                                             type="button"
                                             variant="outline"
                                             size="lg"
                                             className="w-full text-base"
-                                            onClick={handleNearbySearchClick} // Changed action
-                                            disabled={isLoadingLocation}
+                                            onClick={handleNearbySearchClick}
+                                            disabled={isLoadingLocation || isSearching}
                                         >
                                             {isLoadingLocation ? 'Standort wird ermittelt...' : <><Navigation className="w-4 h-4 mr-2" /> In der Nähe suchen</>}
                                         </Button>
                                     </div>
-                                </form>
+                                </div>
                             </CardContent>
                         </Card>
                         <p className="text-xs text-muted-foreground">

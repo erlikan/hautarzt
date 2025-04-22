@@ -8,60 +8,72 @@ Dieses Projekt enthält das Frontend (Next.js), Backend (Supabase Edge Functions
 
 ## Hauptfunktionen
 
-*   Umfassendes Verzeichnis von Hautarztpraxen in Deutschland.
-*   Detaillierte Praxis-Seiten mit Kontaktdaten, Öffnungszeiten, angebotenen Leistungen (Subtypen & Services).
-*   KI-basierte Analyse von Patientenbewertungen zu Aspekten wie Wartezeit, Freundlichkeit, Kompetenz etc.
-*   Einzigartiger "Praxis-Score" basierend auf Google-Bewertungen und KI-Einblicken.
-*   Suche nach Stadt, PLZ und **in der Nähe** (Standortbasiert).
+*   Umfassendes Verzeichnis von Hautarztpraxen in Deutschland (gefiltert, bereinigt).
+*   Detaillierte Praxis-Seiten mit Kontaktdaten, Öffnungszeiten (parsed), Fotos, Subtypen und angebotenen Leistungen.
+*   KI-basierte Analyse von Patientenbewertungen zu Aspekten wie Wartezeit, Freundlichkeit, Kompetenz etc., generiert Scores, Zusammenfassungen, Tags, Stärken/Schwächen.
+*   Einzigartiger "Praxis-Score" basierend auf Google-Bewertungen (Fallback-Berechnung) und KI-Einblicken.
+*   Suche nach Stadt (mit Autocomplete/Vorschlägen), PLZ und **in der Nähe** (Standortbasiert mit Radius).
+*   Intelligente Such-Weiterleitung mit Disambiguierungsfunktion für mehrdeutige Städtenamen.
+*   Verfeinertes Suchergebnis-Ranking (Relevanz-Tier > Score-Verfügbarkeit > Score-Wert).
+*   Automatisches, geplantes Abrufen von Google Maps Rezensionen via Apify (Webhook-Integration).
+*   Dynamische FAQ-Sektion und Leistungsbeschreibungen aus lokalen Markdown-Dateien.
+*   Verbessertes UI/UX für Homepage, Suchergebnisse und Detailseiten (inspiriert von Airbnb).
 *   Dynamische Sitemap (`/sitemap.xml`) für verbesserte SEO.
-*   Automatisches Abrufen von Google Maps Rezensionen via Apify.
-*   Dynamische FAQ-Sektion und Leistungsbeschreibungen aus Markdown-Dateien.
-*   Verbessertes UI/UX für Homepage, Suchergebnisse und Detailseiten (Airbnb-inspiriert).
-*   Kontaktformular (Backend-Implementierung ausstehend).
+*   Kontaktseite mit Formular-UI (Backend ausstehend).
+*   Impressum & Datenschutzseiten (Basisstruktur).
 
 ## Technologien
 
-*   **Frontend:** Next.js (App Router), React, TypeScript, Tailwind CSS, Shadcn UI, Leaflet (Karte), `react-markdown`
+*   **Frontend:** Next.js (App Router), React, TypeScript, Tailwind CSS, Shadcn UI, Leaflet (Karte), `react-markdown`, `gray-matter`, `use-debounce`
 *   **Backend:** Supabase (PostgreSQL, Auth, Edge Functions, pg_cron, PostGIS)
 *   **KI:** Google Generative AI (Gemini API)
 *   **Datenbeschaffung:** Apify (Google Maps Reviews Scraper)
 *   **Content:** Markdown (`gray-matter` für Parsing)
-*   **Hosting:** Supabase für Backend, Frontend-Hosting auf Hetzner (via Docker/Node.js)
+*   **Hosting:** Supabase für Backend, Frontend auf Hetzner (via Node.js/PM2/Nginx)
+*   **Prozessmanagement (Prod):** PM2
+*   **Reverse Proxy (Prod):** Nginx
 
 ## Projektstruktur
 
 *   `/frontend`: Next.js Frontend-Anwendung
-    *   `/app`: Routen (Pages, Layouts, API Routes)
-    *   `/components`: Wiederverwendbare React-Komponenten (UI, Layout, spezifische Features)
+    *   `/app`: Routen (Pages, Layouts, API Routes like `/api/search-redirect`, `/api/city-suggestions`)
+    *   `/components`: Wiederverwendbare React-Komponenten
     *   `/lib`: Hilfsfunktionen, Konstanten, Typen
-    *   `/public`: Statische Assets (Logo, Favicon)
+    *   `/public`: Statische Assets (Logo, Favicon, `/data/city-suggestions.json`)
     *   `/content`: Markdown-Dateien für statische Inhalte
-        *   `/faq`: Fragen & Antworten
-        *   `/services`: Leistungsbeschreibungen
+        *   `/faq`: Fragen & Antworten (`*.md`)
+        *   `/services`: Leistungsbeschreibungen (`*.md`)
 *   `/supabase`: Supabase Konfiguration
     *   `/functions`: Edge Functions
-        *   `praxis-search`: Suchlogik
+        *   `praxis-search`: Suchlogik (ruft SP `search_praxen`)
         *   `praxis-details`: Abrufen von Praxisdetails
-        *   `search-redirect`: Initialen Such-Request verarbeiten
         *   `analyze-practice`: Startet die KI-Analyse
         *   `trigger-apify-review-scrape`: Startet Apify Job für Praxis
         *   `process-apify-webhook`: Verarbeitet Apify Ergebnisse (Webhook)
         *   `batch-fetch-reviews`: Geplanter Job zum Triggern von Apify Läufen
         *   `_shared`: Gemeinsam genutzter Code
-    *   `/migrations`: SQL-Datenbankmigrationen
+    *   `/migrations`: SQL-Datenbankmigrationen (inkl. `search_praxen` SP, `search_distinct_cities_by_prefix` SP, Tabellen)
 
 ## Environment Variables & Secrets
 
 *Siehe `frontend/.env.example` und die Secrets-Konfiguration im Supabase Dashboard.*
 
-**Zusätzlich benötigt für Apify & Co.:**
+**Wichtige Variablen:**
 
-*   `APIFY_API_TOKEN`: Dein Apify API Token.
-*   `APIFY_ACTOR_ID`: ID oder Name des Apify Google Maps Reviews Scrapers.
-*   `APIFY_FETCH_BATCH_SIZE` (Optional): Anzahl Praxen pro Batch-Lauf (Default: 5).
-*   `CLOUDFLARE_TURNSTILE_SECRET_KEY` (Optional, für Kontaktformular): Dein Turnstile Secret Key.
-*   `RESEND_API_KEY` (Optional, für Kontaktformular): Dein Resend API Key.
-*   `CONTACT_RECIPIENT_EMAIL` (Optional, für Kontaktformular): E-Mail-Adresse für Kontaktanfragen.
+*   **Frontend (`.env.local` / Prod Env):**
+    *   `NEXT_PUBLIC_SUPABASE_URL`: Supabase Projekt-URL.
+    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase Anon Key.
+    *   `NEXT_PUBLIC_BASE_URL`: Absolute Basis-URL des Frontends (z.B. `http://localhost:3000`, `https://www.hautarzt-vergleich.de`).
+*   **Supabase Secrets:**
+    *   `HAUTARZT_SUPABASE_SERVICE_KEY`: Supabase Service Role Key (für Functions mit Admin-Rechten).
+    *   `GEMINI_API_KEY`: Google Generative AI API Key.
+    *   `APIFY_API_TOKEN`: Apify API Token.
+    *   `APIFY_ACTOR_ID`: Apify Scraper ID/Name.
+    *   `APIFY_FETCH_BATCH_SIZE` (Optional): Default 5.
+    *   `CLOUDFLARE_TURNSTILE_SECRET_KEY` (Für zukünftiges Kontaktformular).
+    *   `RESEND_API_KEY` (Für zukünftiges Kontaktformular).
+    *   `CONTACT_RECIPIENT_EMAIL` (Für zukünftiges Kontaktformular).
+    *   *(Ggf. weitere wie `UPSTASH_REDIS_*` falls Rate Limiting genutzt wird)*
 
 ## Setup & Entwicklung
 
@@ -69,13 +81,22 @@ Dieses Projekt enthält das Frontend (Next.js), Backend (Supabase Edge Functions
 
 ## Content Management
 
-*   **FAQs:** Bearbeiten/Hinzufügen von `.md` Dateien in `frontend/content/faq/`. Frontmatter steuert Anzeige (`is_active`, `display_order`).
-*   **Leistungsbeschreibungen:** Bearbeiten/Hinzufügen von `.md` Dateien in `frontend/content/services/`. Frontmatter steuert Anzeige (`is_active`, `display_on_homepage`).
+*   **FAQs:** Bearbeiten/Hinzufügen von `.md` Dateien in `frontend/content/faq/`. Frontmatter steuert Anzeige (`question`, `is_active`, `display_order`). Inhalt ist die Antwort.
+*   **Leistungsbeschreibungen:** Bearbeiten/Hinzufügen von `.md` Dateien in `frontend/content/services/`. Frontmatter steuert Anzeige (`title`, `slug`, `summary`, `icon_name`, `is_active`, `display_on_homepage`). Inhalt ist die Detailbeschreibung.
+*   **Städte-Vorschläge:** Generiert aus der DB in `frontend/public/data/city-suggestions.json`. Muss manuell oder per Skript aktualisiert werden.
 
-## Deployment
+## Deployment (Hetzner)
 
-*   **Supabase:** Backend (DB, Functions) wird via Supabase CLI (`supabase db push`, `supabase functions deploy`) deployed.
-*   **Frontend:** Deployment auf Hetzner Server (Details zum Setup folgen).
+1.  **Server Setup:** Nginx, Node.js (passende Version), PM2 (`sudo npm install pm2 -g`).
+2.  **Code:** Klonen/Kopieren des `frontend` Verzeichnisses.
+3.  **Dependencies:** `npm install` im `frontend` Verzeichnis.
+4.  **Environment Variables:** Setzen der `NEXT_PUBLIC_*` Variablen in der Server-Umgebung.
+5.  **Build:** `npm run build`.
+6.  **Start with PM2:** `pm2 start npm --name "hautarzt-frontend" -- start -p 3000`.
+7.  **PM2 Persistenz:** `pm2 save`, `pm2 startup`.
+8.  **Nginx Config:** Reverse Proxy für Port 3000 aufsetzen (siehe Beispielkonfigurationen online).
+9.  **DNS & SSL:** Domain auf Server-IP zeigen lassen, SSL mit Certbot einrichten.
+10. **Supabase Backend:** Mit `supabase db push` und `supabase functions deploy` deployen (oder SPs manuell im Editor ausführen).
 
 ## Beitragende
 
