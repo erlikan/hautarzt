@@ -75,6 +75,7 @@ export interface PraxisAnalysis {
 export interface Service {
     id: number;
     name: string; // Added name based on LeistungenSection usage
+    is_relevant_dermatology?: boolean; // Add the flag (optional as we filter in backend now)
 }
 
 // Simplified and consolidated interface for the Detail Page data

@@ -57,19 +57,21 @@ export const apiService = {
         return '';
     },
 
-    // Get list of all services
+    // Get list of all RELEVANT services (for filters)
     async getServices(): Promise<Service[]> {
         try {
             const { data, error } = await supabase
                 .from('service')
-                .select('id, name')
+                .select('id, name, is_relevant_dermatology') // Select the flag
+                .eq('is_relevant_dermatology', true) // Filter for relevant services
                 .order('name', { ascending: true });
 
             if (error) {
-                console.error('Error fetching services:', error);
+                console.error('Error fetching relevant services:', error);
                 return [];
             }
-            return data || [];
+            // Add type assertion here if needed, though Supabase client might infer
+            return (data as Service[]) || [];
         } catch (err) {
             console.error('Exception in getServices:', err);
             return [];

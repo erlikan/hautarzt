@@ -3,7 +3,7 @@ title: "Aknebehandlung: Was Sie wissen sollten"
 slug: "aknebehandlung"
 icon_name: "sparkles"
 summary: "Moderne Therapien gegen Akne, von Cremes bis zu speziellen Behandlungen. Finden Sie heraus, was hilft."
-display_on_homepage: true
+display_on_homepage: false
 is_active: true
 ---
 
