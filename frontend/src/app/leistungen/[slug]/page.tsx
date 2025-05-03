@@ -4,6 +4,7 @@ import matter from 'gray-matter';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import ReactMarkdown from 'react-markdown'; // Import for rendering content
+import remarkGfm from 'remark-gfm'; // Import the plugin
 // Import the icon helper
 import { getLucideIcon } from '@/lib/utils';
 import Link from 'next/link';
@@ -107,7 +108,9 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                     <h1>{frontmatter.title}</h1>
                 </div>
                 {/* Render the markdown content */}
-                <ReactMarkdown>{content}</ReactMarkdown>
+                <div className="prose lg:prose-xl max-w-none mx-auto mt-8 text-gray-700 dark:text-gray-300">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                </div>
             </article>
 
             {/* Optional: Add a CTA or link back */}

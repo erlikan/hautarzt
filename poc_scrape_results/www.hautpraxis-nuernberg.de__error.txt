@@ -1,0 +1,7 @@
+Exception during processing https://www.hautpraxis-nuernberg.de/:
+'\n  "type"'
+
+Traceback (most recent call last):
+  File "/Users/culukan/Projects/hautarzt-verzeichnis/scripts/poc_scrape_practice.py", line 149, in run_crawl_and_extract
+    user_prompt = USER_PROMPT_TEMPLATE_BASE.format(html_content=html_content)
+KeyError: '\n  "type"'

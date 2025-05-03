@@ -1,0 +1,10 @@
+Exception during processing http://www.dermakunze.de/:
+BFSDeepCrawlStrategy.__init__() got an unexpected keyword argument 'filters'
+
+Traceback (most recent call last):
+  File "/Users/culukan/Projects/hautarzt-verzeichnis/scripts/poc_scrape_practice.py", line 127, in run_crawl_and_extract
+    bfs_strategy = BFSDeepCrawlStrategy(
+        max_depth=1,
+        filters=[DomainFilter()] # Stay within the same domain
+    )
+TypeError: BFSDeepCrawlStrategy.__init__() got an unexpected keyword argument 'filters'

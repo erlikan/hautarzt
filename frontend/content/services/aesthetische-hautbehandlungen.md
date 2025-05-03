@@ -3,7 +3,7 @@ title: "Ästhetische Hautbehandlungen beim Dermatologen"
 slug: "aesthetische-hautbehandlungen"
 icon_name: "Sparkles"
 summary: "Von Faltenbehandlung bis zur Narbenkorrektur – erfahren Sie, welche ästhetischen Leistungen Hautärzte anbieten und was sie kosten."
-display_on_homepage: true
+display_on_homepage: false
 is_active: true
 ---
 

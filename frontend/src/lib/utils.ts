@@ -21,6 +21,17 @@ export function capitalizeCity(slug: string): string {
 type LucideIconComponent = React.ComponentType<LucideIcons.LucideProps>;
 
 /**
+ * Converts a kebab-case string to PascalCase.
+ * Example: "shield-check" -> "ShieldCheck"
+ */
+const kebabToPascalCase = (str: string): string => {
+  return str
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+};
+
+/**
  * Gets a Lucide icon component by its string name.
  * Returns null if the icon name is invalid or not found.
  */
@@ -29,12 +40,13 @@ export const getLucideIcon = (iconName: string | null | undefined): LucideIconCo
     return null;
   }
 
-  const pascalCaseIconName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
+  // Convert kebab-case to PascalCase for component lookup
+  const pascalCaseIconName = kebabToPascalCase(iconName);
 
-  // Access icons safely using the PascalCase name
+  // Access icons safely using the correct PascalCase name
   const IconComponent = (LucideIcons as any)[pascalCaseIconName];
 
-  // Check if the component was found (is truthy), not necessarily typeof 'function'
+  // Check if the component was found
   if (IconComponent) {
     return IconComponent as LucideIconComponent;
   }
