@@ -1,7 +1,7 @@
 ---
 title: "Hormonbehandlung in der Dermatologie: Alles, was Sie wissen müssen"
 slug: "hormonbehandlung-dermatologie"
-icon_name: "flask"
+icon_name: "flask-conical"
 summary: "Hormonelle Akne, Hautalterung oder Hirsutismus? Erfahren Sie, wie Hormonbehandlungen in der Dermatologie gezielt helfen können."
 display_on_homepage: false
 is_active: true

@@ -1,7 +1,7 @@
 ---
 title: "Warzenentfernung: Schnell und sicher Warzen loswerden"
 slug: "warzenentfernung"
-icon_name: "virus"
+icon_name: "slice"
 summary: "Warzen stören optisch oder schmerzen? Erfahren Sie alles über sichere Methoden zur Warzenentfernung, Kosten und Nachsorge beim Hautarzt."
 display_on_homepage: false
 is_active: true

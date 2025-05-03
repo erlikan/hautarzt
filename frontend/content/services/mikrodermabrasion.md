@@ -1,7 +1,7 @@
 ---
 title: "Mikrodermabrasion: Effektive Hautbehandlung für ein strahlendes Hautbild"
 slug: "mikrodermabrasion"
-icon_name: "refresh"
+icon_name: "refresh-cw"
 summary: "Mikrodermabrasion ist eine schonende kosmetische Behandlung, bei der abgestorbene Hautzellen mechanisch entfernt werden, um das Hautbild zu verbessern."
 display_on_homepage: false
 is_active: true

@@ -1,7 +1,7 @@
 ---
 title: "STI (Sexuell übertragbare Infektionen): Diagnose, Test und Behandlung beim Hautarzt"
 slug: "sti"
-icon_name: "virus"
+icon_name: "worm"
 summary: "Sexuell übertragbare Infektionen (STI) sind Erkrankungen, die hauptsächlich beim Geschlechtsverkehr übertragen werden. Erfahren Sie mehr über Symptome, Tests und Behandlungsmöglichkeiten."
 display_on_homepage: false
 is_active: true

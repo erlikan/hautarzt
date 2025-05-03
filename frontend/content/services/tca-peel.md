@@ -1,7 +1,7 @@
 ---
 title: "TCA Peeling: Effektive Hautregeneration für ein strahlendes Hautbild"
 slug: "tca-peel"
-icon_name: "refresh"
+icon_name: "badge-plus"
 summary: "Das TCA Peeling ist eine wirksame chemische Behandlungsmethode zur Hautverjüngung, die abgestorbene Hautzellen entfernt und die Hautregeneration fördert."
 display_on_homepage: false
 is_active: true

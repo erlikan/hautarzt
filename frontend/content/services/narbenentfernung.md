@@ -1,7 +1,7 @@
 ---
 title: "Narbenentfernung: Wege zu glatter Haut"
 slug: "narbenentfernung"
-icon_name: "healing"
+icon_name: "bandage"
 summary: "Von Cremes bis Laser – erfahren Sie alles über moderne Methoden zur Narbenentfernung, Kosten, Risiken und die beste Nachsorge."
 display_on_homepage: false
 is_active: true
