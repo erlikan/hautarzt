@@ -57,12 +57,13 @@ const popularCities: CityData[] = [
 
 // Type for disambiguation options
 interface DisambiguationOption {
-    name: string;
+    value: string;
     slug: string;
 }
 
+// Updated interface for suggestions
 interface Suggestion {
-    name: string;
+    value: string;
     slug: string;
 }
 
@@ -89,9 +90,9 @@ export default function HomePageClientContent({
     // --- NEW STATE --- 
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState<string | null>(null);
-    const [disambiguationOptions, setDisambiguationOptions] = useState<Suggestion[] | null>(null);
+    const [disambiguationOptions, setDisambiguationOptions] = useState<DisambiguationOption[] | null>(null);
 
-    // --- State for Autocomplete --- 
+    // --- State for Autocomplete (Updated type) --- 
     const [allCities, setAllCities] = useState<Suggestion[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -103,7 +104,7 @@ export default function HomePageClientContent({
             try {
                 const response = await fetch('/data/city-suggestions.json');
                 if (!response.ok) throw new Error('Failed to fetch city data');
-                const data: Suggestion[] = await response.json();
+                const data: Suggestion[] = await response.json(); // Type assertion updated
                 setAllCities(data);
                 // console.log(`[HomePage] Loaded ${data.length} cities for suggestions.`);
             } catch (fetchError) {
@@ -118,10 +119,10 @@ export default function HomePageClientContent({
     const handleFilterSuggestions = useDebouncedCallback((value: string) => {
         if (value.length >= 2) {
             const lowerValue = value.toLowerCase();
-            const filtered = allCities.filter(city =>
-                city.name.toLowerCase().includes(lowerValue) || // Use includes for broader matching
-                city.slug.toLowerCase().includes(lowerValue)
-            ).slice(0, 7);
+            // --- UPDATED FILTERING LOGIC --- 
+            const filtered = allCities.filter(suggestion =>
+                suggestion.value.toLowerCase().startsWith(lowerValue) // Filter on 'value', use startsWith
+            ).slice(0, 10); // Increased limit slightly to show more PLZs
             setSuggestions(filtered);
             // console.log("Suggestions updated:", filtered); 
         } else {
@@ -214,8 +215,8 @@ export default function HomePageClientContent({
                 const result = await response.json();
                 // console.log("[handleSearchSubmit] Received JSON result:", result);
                 if (result.type === 'disambiguation' && result.options?.length > 0) {
-                    // console.log("[handleSearchSubmit] Setting disambiguation options.");
-                    setDisambiguationOptions(result.options);
+                    // Ensure the type assertion is correct here
+                    setDisambiguationOptions(result.options as DisambiguationOption[]);
                 } else if (result.type === 'no_match') {
                     setSearchError(`Keine Stadt oder PLZ für "${query}" gefunden. Bitte Eingabe prüfen.`);
                 } else {
@@ -281,7 +282,7 @@ export default function HomePageClientContent({
                                                 <CommandInput
                                                     placeholder="PLZ oder Stadt suchen..."
                                                     value={inputValue}
-                                                    onValueChange={handleInputValueChange} // Use specific handler
+                                                    onValueChange={handleInputValueChange}
                                                     onKeyDown={(e) => {
                                                         if (e.key === 'Escape') {
                                                             setIsPopoverOpen(false);
@@ -307,13 +308,13 @@ export default function HomePageClientContent({
                                                         <CommandGroup>
                                                             {suggestions.map((suggestion) => (
                                                                 <CommandItem
-                                                                    key={suggestion.slug}
-                                                                    value={`${suggestion.name} ${suggestion.slug}`}
+                                                                    key={suggestion.value}
+                                                                    value={suggestion.value}
                                                                     onSelect={() => handleSuggestionSelect(suggestion.slug)}
                                                                     className="cursor-pointer"
                                                                 >
                                                                     <Building className="mr-2 h-4 w-4" />
-                                                                    <span>{suggestion.name}</span>
+                                                                    <span>{suggestion.value}</span>
                                                                 </CommandItem>
                                                             ))}
                                                         </CommandGroup>
@@ -337,7 +338,7 @@ export default function HomePageClientContent({
                                             <div className="flex flex-wrap gap-x-4 gap-y-2">
                                                 {disambiguationOptions.map(opt => (
                                                     <Link key={opt.slug} href={`/hautarzt/${opt.slug}`} className="text-blue-600 hover:underline hover:text-blue-800 flex items-center gap-1">
-                                                        <LinkIcon className="w-3 h-3" /> {opt.name}
+                                                        <LinkIcon className="w-3 h-3" /> {opt.value}
                                                     </Link>
                                                 ))}
                                             </div>
