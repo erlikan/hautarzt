@@ -9,43 +9,54 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card"; // For form container
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import AlertTitle
 // Import React hooks
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+// Import reCAPTCHA hook and provider
+import { GoogleReCaptchaProvider, useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
-export default function KontaktPage() {
-    // State for form inputs
+// Wrap the main component logic for provider context
+function KontaktForm() {
     const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
     const [submitMessage, setSubmitMessage] = useState<string | null>(null);
-    // State for CAPTCHA token (example)
-    // const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+    // --- reCAPTCHA State and Hook ---
+    const { executeRecaptcha } = useGoogleReCaptcha();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Check captchaToken validity here
-        // if (!captchaToken) { 
-        //     setSubmitStatus('error');
-        //     setSubmitMessage('Bitte bestätigen Sie, dass Sie kein Roboter sind.');
-        //     return;
-        // }
+
+        if (!executeRecaptcha) {
+            console.error("executeRecaptcha not yet available");
+            setSubmitStatus('error');
+            setSubmitMessage('reCAPTCHA konnte nicht geladen werden. Bitte versuchen Sie es später erneut.');
+            return;
+        }
 
         setIsSubmitting(true);
         setSubmitStatus(null);
         setSubmitMessage(null);
 
         try {
-            // TODO: Implement fetch call to the backend Edge Function
-            const response = await fetch('/api/contact-form-handler', { // Example endpoint
+            // Get reCAPTCHA token
+            const captchaToken = await executeRecaptcha('contactForm'); // Action name
+
+            if (!captchaToken) {
+                throw new Error("reCAPTCHA-Token konnte nicht generiert werden.");
+            }
+
+            // Fetch call to the backend Edge Function
+            const response = await fetch('/api/contact-form-handler', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
-                    // captchaToken: captchaToken 
+                    captchaToken: captchaToken // Send token to backend
                 }),
             });
 
@@ -58,8 +69,6 @@ export default function KontaktPage() {
             setSubmitStatus('success');
             setSubmitMessage('Vielen Dank! Ihre Nachricht wurde erfolgreich gesendet.');
             setFormData({ name: '', email: '', subject: '', message: '' }); // Reset form
-            // TODO: Reset CAPTCHA if possible
-            // captchaRef.current?.reset(); 
 
         } catch (error: any) {
             setSubmitStatus('error');
@@ -67,9 +76,7 @@ export default function KontaktPage() {
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    // REMOVED contactEmail constant
+    }, [executeRecaptcha, formData]); // Add dependencies
 
     return (
         <div className="container py-12 md:py-16">
@@ -125,10 +132,14 @@ export default function KontaktPage() {
                                     value={formData.message} onChange={handleInputChange} disabled={isSubmitting}
                                 />
                             </div>
-                            {/* TODO: Add CAPTCHA Component Here */}
-                            {/* <CaptchaComponent onVerify={setCaptchaToken} ref={captchaRef} /> */}
+                            {/* reCAPTCHA notice - v3 is often invisible */}
+                            <p className="text-xs text-muted-foreground">
+                                Diese Website ist durch reCAPTCHA geschützt und es gelten die
+                                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary"> Datenschutzbestimmungen</a> und
+                                <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary"> Nutzungsbedingungen</a> von Google.
+                            </p>
 
-                            <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            <Button type="submit" className="w-full" disabled={isSubmitting || !executeRecaptcha}>
                                 {isSubmitting ? 'Wird gesendet...' : <>Nachricht senden <Send className="w-4 h-4 ml-2" /></>}
                             </Button>
                             <p className="text-xs text-muted-foreground pt-2">
@@ -138,18 +149,40 @@ export default function KontaktPage() {
                     </CardContent>
                 </Card>
 
-                {/* Right Column: Contact Info & Text - REMOVED EMAIL */}
+                {/* Right Column: Contact Info */}
                 <div className="space-y-6">
                     <h2 className="text-xl font-semibold">Kontaktinformation</h2>
                     <p className="text-muted-foreground">
                         Haben Sie Fragen, Anregungen oder möchten Sie einen Fehler melden? Bitte nutzen Sie das Kontaktformular. Wir bemühen uns, Ihre Anfrage zeitnah zu bearbeiten.
                     </p>
-                    {/* Removed Email display */}
-                    {/* <div className="space-y-3"> ... email link ... </div> */}
-                    {/* Optional: Add Address Card if needed later */}
                 </div>
 
             </div>
         </div>
+    );
+}
+
+// Main export wrapping the form with the Provider
+export default function KontaktPage() {
+    const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
+    if (!recaptchaSiteKey) {
+        // Handle missing site key - maybe show an error or disable the form
+        console.error("reCAPTCHA Site Key is missing. Please check environment variables.");
+        return (
+            <div className="container py-12 md:py-16 text-center">
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Konfigurationsfehler</AlertTitle>
+                    <AlertDescription>Das Kontaktformular kann nicht geladen werden. Bitte versuchen Sie es später erneut.</AlertDescription>
+                </Alert>
+            </div>
+        );
+    }
+
+    return (
+        <GoogleReCaptchaProvider reCaptchaKey={recaptchaSiteKey}>
+            <KontaktForm />
+        </GoogleReCaptchaProvider>
     );
 } 

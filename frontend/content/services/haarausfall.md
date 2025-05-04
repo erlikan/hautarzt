@@ -3,7 +3,7 @@ title: "Haarausfall: Ursachen, Behandlung und wirksame Lösungen"
 slug: "haarausfall"
 icon_name: "scissors"
 summary: "Haarausfall ist ein häufiges dermatologisches Problem mit vielfältigen Ursachen. Erfahren Sie alles über Diagnose, Behandlungsmöglichkeiten und effektive Therapien bei einem Dermatologen."
-display_on_homepage: false
+display_on_homepage: true
 is_active: true
 ---
 
