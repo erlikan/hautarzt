@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         const { data, error } = await resend.emails.send({
             from: 'Kontaktformular <kontakt@hautarzt-vergleich.de>', // Use a verified domain in Resend
             to: [receiverEmail],
-            reply_to: email, // Set reply-to for easy response
+            replyTo: email, // Corrected from reply_to to replyTo
             subject: `Neue Kontaktanfrage: ${subject || 'Kein Betreff'}`,
             html: `
                 <h1>Neue Kontaktanfrage von Hautarzt-Vergleich.de</h1>
