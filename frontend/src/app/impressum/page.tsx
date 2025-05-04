@@ -14,7 +14,7 @@ export default function ImpressumPage() {
     const siteRepresentative = "Cagatay Ulukan"; // z.B. Sie selbst, wenn Einzelunternehmer
     const siteContactEmail = "info@hautarzt-vergleich.de"; // Dieselbe wie im Datenschutz
     const siteContactPhone = "";
-    const responsiblePerson = "[Name des Verantwortlichen für journalistisch-redaktionelle Inhalte]"; // Oft identisch mit Betreiber/Vertreter
+    const responsiblePerson = "siehe Vertretung"; // Oft identisch mit Betreiber/Vertreter
     const responsiblePersonAddress = ""; // Oft identisch mit Betreiber
 
     return (
@@ -24,7 +24,6 @@ export default function ImpressumPage() {
             </h1>
 
             <div className="prose prose-zinc max-w-none dark:prose-invert">
-                <p className="text-sm text-red-600 font-medium">Hinweis: Dies ist ein automatisch generierter Entwurf und ersetzt keine Rechtsberatung. Bitte lassen Sie dieses Impressum anwaltlich prüfen und passen Sie die [Platzhalter] an.</p>
 
                 <h2>Angaben gemäß § 5 TMG</h2>
                 <p>

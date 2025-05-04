@@ -14,7 +14,7 @@ export default function DatenschutzPage() {
     const siteOperatorStreet = "Ammerswilerstrasse 35"; // Same as Impressum
     const siteOperatorCity = "5600 Lenzburg / Schweiz"; // Same as Impressum
     const siteContactEmail = "info@hautarzt-vergleich.de"; // Same as Impressum
-    const lastUpdatedDate = "April.2025]";
+    const lastUpdatedDate = "April.2025";
     const hostingProviderInfo = "Hetzner Online GmbH, Industriestr. 25, 90596 Nuremberg, Germany"; // Replace!
     const analyticsToolInfo = ""; // Replace or Delete!
     const cookieConsentToolInfo = "Cookie Consent Tool von Cvelop"; // Replace or Delete!
@@ -26,8 +26,6 @@ export default function DatenschutzPage() {
             </h1>
 
             <div className="prose prose-zinc max-w-none dark:prose-invert">
-                <p className="text-sm text-red-600 font-medium">Hinweis: Dies ist ein automatisch generierter Entwurf und ersetzt keine Rechtsberatung. Bitte lassen Sie diese Datenschutzerklärung anwaltlich prüfen und passen Sie die [Platzhalter] sowie die Inhalte an Ihre spezifischen Datenverarbeitungsprozesse an.</p>
-
                 <p>Stand: {lastUpdatedDate}</p>
 
                 <h2>1. Verantwortlicher</h2>
@@ -87,7 +85,7 @@ export default function DatenschutzPage() {
                 <p><strong>b) Google Generative AI (Gemini API)</strong></p>
                 <p>Zur Analyse der Patientenbewertungen und zur Erstellung von Zusammenfassungen und Einblicken nutzen wir die Google Generative AI (Gemini API) von Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. Hierzu werden anonymisierte oder pseudonymisierte Praxis- und Bewertungsdaten an Google übertragen. Wir sind bestrebt, keine direkt identifizierenden Personeninformationen (wie Patientennamen aus Rezensionen) an die API zu senden. Die Verarbeitung erfolgt zur Erfüllung unseres Angebots (Art. 6 Abs. 1 lit. b DSGVO) und auf Basis unseres berechtigten Interesses an der Verbesserung unseres Dienstes (Art. 6 Abs. 1 lit. f DSGVO). Daten können in die USA übertragen werden; Google sichert die Einhaltung europäischer Datenschutzstandards durch Standardvertragsklauseln zu. Weitere Informationen: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">https://policies.google.com/privacy</a></p>
                 <p><strong>c) Apify</strong></p>
-                <p>Zur Sammlung von öffentlichen Google Maps Rezensionen nutzen wir Dienste der Apify Technologies s.r.o., Vodičkova 704/36, 110 00 Praha 1, Tschechische Republik. Hierbei werden öffentliche Praxis-URLs zur Initiierung der Sammlung an Apify übergeben. Apify verarbeitet diese Daten in unserem Auftrag. Rechtsgrundlage ist unser berechtigtes Interesse an der Bereitstellung aktueller Bewertungsdaten (Art. 6 Abs. 1 lit. f DSGVO). Weitere Informationen: <a href="https://apify.com/privacy-policy" target="_blank" rel="noopener noreferrer">https://apify.com/privacy-policy</a></p>
+                <p>Zur Sammlung von öffentlichen Praxis Rezensionen nutzen wir Dienste der Apify Technologies s.r.o., Vodičkova 704/36, 110 00 Praha 1, Tschechische Republik. Hierbei werden öffentliche Praxis-URLs zur Initiierung der Sammlung an Apify übergeben. Apify verarbeitet diese Daten in unserem Auftrag. Rechtsgrundlage ist unser berechtigtes Interesse an der Bereitstellung aktueller Bewertungsdaten (Art. 6 Abs. 1 lit. f DSGVO). Weitere Informationen: <a href="https://apify.com/privacy-policy" target="_blank" rel="noopener noreferrer">https://apify.com/privacy-policy</a></p>
                 <p><strong>d) Resend (E-Mail Versand)</strong></p>
                 <p>Für den Versand von E-Mails, insbesondere im Rahmen des Kontaktformulars, nutzen wir den Dienstleister Resend Inc., 1046 Kearny St, San Francisco, CA 94133, USA. Die Verarbeitung basiert auf unserem berechtigten Interesse an einer zuverlässigen Zustellung (Art. 6 Abs. 1 lit. f DSGVO) und Ihrer Einwilligung bei Nutzung des Formulars (Art. 6 Abs. 1 lit. a DSGVO). Weitere Informationen: <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">https://resend.com/legal/privacy-policy</a>.</p>
                 <p><strong>e) [Platzhalter: Analysetool-Anbieter, falls verwendet]</strong></p>
