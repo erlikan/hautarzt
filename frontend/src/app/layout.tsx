@@ -9,8 +9,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" }); // Ensure 
 
 export const metadata: Metadata = {
     // Default title/description - will be overridden by pages
-    title: "Hautarzt Vergleich",
-    description: "Vergleichen Sie Hautärzte in Ihrer Nähe basierend auf echten Patienteneinblicken.",
+    title: "Hautarzt Vergleich: Den besten Hautarzt in Ihrer Nähe finden",
+    description: "Vergleichen Sie Hautärzte basierend auf echten Patientenerfahrungen zu Wartezeit, Freundlichkeit und Kompetenz. Finden Sie den passenden Dermatologen.",
     metadataBase: new URL('https://www.hautarzt-vergleich.de'), // Replace with your actual production domain!
     // Favicon Configuration - ADDED
     icons: {
@@ -28,8 +28,13 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="de" suppressHydrationWarning>
+            <head>
+                {/* Ahrefs Analytics Script */}
+                <script src="https://analytics.ahrefs.com/analytics.js" data-key="H5/ABpS0MCdI4Xc6KgEL+g" async></script>
+                {/* Other head elements if any */}
+            </head>
             <body className={cn(
-                "min-h-screen bg-background font-sans antialiased",
+                "min-h-screen bg-background font-sans antialiased flex flex-col", // Ensure flex layout for footer sticking
                 inter.variable // Use the variable with cn
             )}>
                 <div className="flex flex-col min-h-screen">

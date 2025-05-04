@@ -91,7 +91,22 @@ export default function DatenschutzPage() {
                 <p><strong>e) [Platzhalter: Analysetool-Anbieter, falls verwendet]</strong></p>
                 <p>[Platzhalter: Fügen Sie hier Details zur Datenverarbeitung durch Ihren Analysetool-Anbieter ein.]</p>
 
-                <h2>7. Ihre Rechte als betroffene Person</h2>
+                <h2>7. Webanalyse (Ahrefs Analytics)</h2>
+                <p>
+                    Diese Website benutzt Ahrefs Analytics, einen Webanalysedienst der Ahrefs Pte. Ltd., 16 Raffles Quay, #33-03, Hong Leong Building, Singapur 048581.
+                    Ahrefs Analytics verwendet möglicherweise Technologien, die eine Analyse der Benutzung der Website durch Sie ermöglichen (z.B. Cookies oder Device-Fingerprinting). Die erfassten Informationen über Ihre Benutzung dieser Website werden in der Regel anonymisiert und auf Servern von Ahrefs gespeichert.
+                </p>
+                <p>
+                    Wir nutzen Ahrefs Analytics, um die Nutzung unserer Website zu analysieren und regelmäßig verbessern zu können. Über die gewonnenen Statistiken können wir unser Angebot verbessern und für Sie als Nutzer interessanter ausgestalten.
+                </p>
+                <p>
+                    Die Rechtsgrundlage für den Einsatz von Ahrefs Analytics ist Ihre Einwilligung gemäß Art. 6 Abs. 1 lit. a DSGVO und § 25 Abs. 1 TTDSG, sofern Sie diese über unser Cookie-Consent-Tool erteilt haben. [Hinweis: Falls keine Einwilligung eingeholt wird (z.B. weil Ahrefs Analytics cookielos und datenschutzfreundlich konfiguriert ist), wäre die Rechtsgrundlage Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Reichweitenmessung und Optimierung des Webangebots).] Sie können Ihre Einwilligung jederzeit widerrufen.
+                </p>
+                <p>
+                    Weitere Informationen zum Datenschutz bei Ahrefs finden Sie unter: <a href="https://ahrefs.com/privacy" target="_blank" rel="noopener noreferrer">https://ahrefs.com/privacy</a>
+                </p>
+
+                <h2>8. Ihre Rechte als betroffene Person</h2>
                 <p>Werden personenbezogene Daten von Ihnen verarbeitet, sind Sie Betroffener i.S.d. DSGVO und es stehen Ihnen folgende Rechte gegenüber dem Verantwortlichen zu:</p>
                 <ul>
                     <li><strong>Auskunftsrecht (Art. 15 DSGVO):</strong> Sie können Auskunft über Ihre von uns verarbeiteten personenbezogenen Daten verlangen.</li>
@@ -105,7 +120,7 @@ export default function DatenschutzPage() {
                 </ul>
                 <p>Zur Geltendmachung Ihrer Rechte wenden Sie sich bitte an die oben genannte Kontaktadresse.</p>
 
-                <h2>8. Änderung dieser Datenschutzerklärung</h2>
+                <h2>9. Änderung dieser Datenschutzerklärung</h2>
                 <p>Wir behalten uns vor, diese Datenschutzerklärung anzupassen, damit sie stets den aktuellen rechtlichen Anforderungen entspricht oder um Änderungen unserer Leistungen in der Datenschutzerklärung umzusetzen, z.B. bei der Einführung neuer Services. Für Ihren erneuten Besuch gilt dann die neue Datenschutzerklärung.</p>
 
             </div>
